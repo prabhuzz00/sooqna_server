@@ -1,4 +1,6 @@
 // controllers/vendor.controller.js
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import Vendor from "../models/vendor.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs/promises";
@@ -34,17 +36,23 @@ const createVendor = async (req, res) => {
     let storeBannerUrl = "";
 
     if (req.files?.storeLogo) {
-      const logoResult = await cloudinary.uploader.upload(req.files.storeLogo.tempFilePath, {
-        folder: "vendor_logos",
-      });
+      const logoResult = await cloudinary.uploader.upload(
+        req.files.storeLogo.tempFilePath,
+        {
+          folder: "vendor_logos",
+        }
+      );
       storeLogoUrl = logoResult.secure_url;
       await fs.unlink(req.files.storeLogo.tempFilePath);
     }
 
     if (req.files?.storeBanner) {
-      const bannerResult = await cloudinary.uploader.upload(req.files.storeBanner.tempFilePath, {
-        folder: "vendor_banners",
-      });
+      const bannerResult = await cloudinary.uploader.upload(
+        req.files.storeBanner.tempFilePath,
+        {
+          folder: "vendor_banners",
+        }
+      );
       storeBannerUrl = bannerResult.secure_url;
       await fs.unlink(req.files.storeBanner.tempFilePath);
     }
@@ -82,9 +90,13 @@ const createVendor = async (req, res) => {
   } catch (error) {
     console.error("Create vendor error:", error);
     if (error.code === 11000) {
-      res.status(400).json({ error: true, message: "Email address already exists" });
+      res
+        .status(400)
+        .json({ error: true, message: "Email address already exists" });
     } else {
-      res.status(500).json({ error: true, message: "Server error: " + error.message });
+      res
+        .status(500)
+        .json({ error: true, message: "Server error: " + error.message });
     }
   }
 };
@@ -118,7 +130,9 @@ const getVendors = async (req, res) => {
     });
   } catch (error) {
     console.error("Get vendors error:", error);
-    res.status(500).json({ error: true, message: "Server error: " + error.message });
+    res
+      .status(500)
+      .json({ error: true, message: "Server error: " + error.message });
   }
 };
 
@@ -143,89 +157,105 @@ const verifyVendor = async (req, res) => {
     });
   } catch (error) {
     console.error("Verify vendor error:", error);
-    res.status(500).json({ error: true, message: "Server error: " + error.message });
+    res
+      .status(500)
+      .json({ error: true, message: "Server error: " + error.message });
   }
 };
 
 const editVendor = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const {
-        storeName,
-        storeDescription,
-        ownerName,
-        emailAddress,
-        phoneNumber,
-        storeAddress,
-        productCategories,
-        commissionRate,
-        paymentDetails,
-        taxIdentificationNumber,
-        termsAgreement,
-        isVerified,
-        status,
-      } = req.body; // Removed password
-  
-      let updateData = {
-        storeName,
-        storeDescription,
-        ownerName,
-        emailAddress,
-        phoneNumber,
-        storeAddress,
-        productCategories: productCategories ? JSON.parse(productCategories) : undefined,
-        commissionRate: commissionRate ? Number(commissionRate) : undefined,
-        paymentDetails,
-        taxIdentificationNumber,
-        termsAgreement: termsAgreement === "true" || termsAgreement === true,
-        isVerified: isVerified === "true" || isVerified === true,
-        status: status === "true" || status === true,
-      };
-  
-      if (req.files?.storeLogo) {
-        const logoResult = await cloudinary.uploader.upload(req.files.storeLogo.tempFilePath, {
+  try {
+    const { id } = req.params;
+    const {
+      storeName,
+      storeDescription,
+      ownerName,
+      emailAddress,
+      phoneNumber,
+      storeAddress,
+      productCategories,
+      commissionRate,
+      paymentDetails,
+      taxIdentificationNumber,
+      termsAgreement,
+      isVerified,
+      status,
+    } = req.body; // Removed password
+
+    let updateData = {
+      storeName,
+      storeDescription,
+      ownerName,
+      emailAddress,
+      phoneNumber,
+      storeAddress,
+      productCategories: productCategories
+        ? JSON.parse(productCategories)
+        : undefined,
+      commissionRate: commissionRate ? Number(commissionRate) : undefined,
+      paymentDetails,
+      taxIdentificationNumber,
+      termsAgreement: termsAgreement === "true" || termsAgreement === true,
+      isVerified: isVerified === "true" || isVerified === true,
+      status: status === "true" || status === true,
+    };
+
+    if (req.files?.storeLogo) {
+      const logoResult = await cloudinary.uploader.upload(
+        req.files.storeLogo.tempFilePath,
+        {
           folder: "vendor_logos",
-        });
-        updateData.storeLogo = logoResult.secure_url;
-        await fs.unlink(req.files.storeLogo.tempFilePath);
-      }
-  
-      if (req.files?.storeBanner) {
-        const bannerResult = await cloudinary.uploader.upload(req.files.storeBanner.tempFilePath, {
-          folder: "vendor_banners",
-        });
-        updateData.storeBanner = bannerResult.secure_url;
-        await fs.unlink(req.files.storeBanner.tempFilePath);
-      }
-  
-      // Remove undefined fields
-      Object.keys(updateData).forEach((key) => updateData[key] === undefined && delete updateData[key]);
-  
-      console.log("Update data:", updateData);
-  
-      const vendor = await Vendor.findByIdAndUpdate(id, updateData, {
-        new: true,
-        select: "-password",
-      });
-  
-      if (!vendor) {
-        return res.status(404).json({ error: true, message: "Vendor not found" });
-      }
-  
-      res.status(200).json({
-        error: false,
-        message: "Vendor updated successfully",
-        data: vendor,
-      });
-    } catch (error) {
-      console.error("Edit vendor error:", error);
-      if (error.code === 11000) {
-        res.status(400).json({ error: true, message: "Email address already exists" });
-      } else {
-        res.status(500).json({ error: true, message: "Server error: " + error.message });
-      }
+        }
+      );
+      updateData.storeLogo = logoResult.secure_url;
+      await fs.unlink(req.files.storeLogo.tempFilePath);
     }
-  };
+
+    if (req.files?.storeBanner) {
+      const bannerResult = await cloudinary.uploader.upload(
+        req.files.storeBanner.tempFilePath,
+        {
+          folder: "vendor_banners",
+        }
+      );
+      updateData.storeBanner = bannerResult.secure_url;
+      await fs.unlink(req.files.storeBanner.tempFilePath);
+    }
+
+    // Remove undefined fields
+    Object.keys(updateData).forEach(
+      (key) => updateData[key] === undefined && delete updateData[key]
+    );
+
+    console.log("Update data:", updateData);
+
+    const vendor = await Vendor.findByIdAndUpdate(id, updateData, {
+      new: true,
+      select: "-password",
+    });
+
+    if (!vendor) {
+      return res.status(404).json({ error: true, message: "Vendor not found" });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "Vendor updated successfully",
+      data: vendor,
+    });
+  } catch (error) {
+    console.error("Edit vendor error:", error);
+    if (error.code === 11000) {
+      res
+        .status(400)
+        .json({ error: true, message: "Email address already exists" });
+    } else {
+      res
+        .status(500)
+        .json({ error: true, message: "Server error: " + error.message });
+    }
+  }
+};
 
 const deleteVendor = async (req, res) => {
   try {
@@ -243,7 +273,9 @@ const deleteVendor = async (req, res) => {
     });
   } catch (error) {
     console.error("Delete vendor error:", error);
-    res.status(500).json({ error: true, message: "Server error: " + error.message });
+    res
+      .status(500)
+      .json({ error: true, message: "Server error: " + error.message });
   }
 };
 
@@ -270,8 +302,73 @@ const updateVendorStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Update status error:", error);
-    res.status(500).json({ error: true, message: "Server error: " + error.message });
+    res
+      .status(500)
+      .json({ error: true, message: "Server error: " + error.message });
   }
 };
 
-export { createVendor, getVendors, verifyVendor, editVendor, deleteVendor, updateVendorStatus };
+//login
+const loginVendor = async (req, res) => {
+  try {
+    const { emailAddress, password } = req.body;
+
+    if (!emailAddress || !password) {
+      return res.status(400).json({
+        error: true,
+        message: "Email and password are required",
+      });
+    }
+
+    const vendor = await Vendor.findOne({ emailAddress });
+
+    if (!vendor) {
+      return res.status(404).json({
+        error: true,
+        message: "Vendor not found",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, vendor.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        error: true,
+        message: "Invalid password",
+      });
+    }
+
+    const token = jwt.sign(
+      { id: vendor._id, role: "vendor" },
+      process.env.SECRET_KEY_ACCESS_TOKEN,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    const vendorData = vendor.toObject();
+    delete vendorData.password;
+
+    res.status(200).json({
+      error: false,
+      message: "Login successful",
+      token,
+      data: vendorData,
+    });
+  } catch (error) {
+    console.error("Vendor login error:", error);
+    res
+      .status(500)
+      .json({ error: true, message: "Server error: " + error.message });
+  }
+};
+
+export {
+  createVendor,
+  getVendors,
+  verifyVendor,
+  editVendor,
+  deleteVendor,
+  updateVendorStatus,
+  loginVendor,
+};

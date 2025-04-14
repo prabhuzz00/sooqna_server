@@ -1,5 +1,13 @@
 import express from "express";
-import { createVendor, deleteVendor, editVendor, getVendors, updateVendorStatus, verifyVendor } from "../controllers/vendor.controller.js";
+import {
+  createVendor,
+  deleteVendor,
+  editVendor,
+  getVendors,
+  loginVendor,
+  updateVendorStatus,
+  verifyVendor,
+} from "../controllers/vendor.controller.js";
 import multer from "multer";
 
 const vendorRouter = express.Router();
@@ -18,11 +26,20 @@ const upload = multer({
 });
 
 // Route to create a vendor
-vendorRouter.post("/", upload.fields([{ name: "storeLogo" }, { name: "storeBanner" }]), createVendor);
+vendorRouter.post(
+  "/",
+  upload.fields([{ name: "storeLogo" }, { name: "storeBanner" }]),
+  createVendor
+);
 vendorRouter.get("/list", getVendors);
 vendorRouter.patch("/verify/:id", verifyVendor);
-vendorRouter.patch("/:id", upload.fields([{ name: "storeLogo" }, { name: "storeBanner" }]), editVendor);
+vendorRouter.patch(
+  "/:id",
+  upload.fields([{ name: "storeLogo" }, { name: "storeBanner" }]),
+  editVendor
+);
 vendorRouter.delete("/:id", deleteVendor);
 vendorRouter.patch("/status/:id", updateVendorStatus);
+vendorRouter.post("/login", loginVendor);
 
 export default vendorRouter;
