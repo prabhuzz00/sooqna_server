@@ -1,9 +1,11 @@
 // controllers/vendor.controller.js
-import bcrypt from "bcryptjs";
+import bcryptjs from 'bcryptjs'
 import jwt from "jsonwebtoken";
 import Vendor from "../models/vendor.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs/promises";
+import generatedAccessToken from '../utils/generatedAccessToken.js';
+import genertedRefreshToken from '../utils/generatedRefreshToken.js';
 
 const createVendor = async (req, res) => {
   try {
@@ -309,59 +311,137 @@ const updateVendorStatus = async (req, res) => {
 };
 
 //login
-const loginVendor = async (req, res) => {
+async function loginVendor(request, response) {
   try {
-    const { emailAddress, password } = req.body;
-
-    if (!emailAddress || !password) {
-      return res.status(400).json({
-        error: true,
-        message: "Email and password are required",
-      });
-    }
-
-    const vendor = await Vendor.findOne({ emailAddress });
-
-    if (!vendor) {
-      return res.status(404).json({
-        error: true,
-        message: "Vendor not found",
-      });
-    }
-
-    const isMatch = await bcrypt.compare(password, vendor.password);
-
-    if (!isMatch) {
-      return res.status(401).json({
-        error: true,
-        message: "Invalid password",
-      });
-    }
-
-    const token = jwt.sign(
-      { id: vendor._id, role: "vendor" },
-      process.env.SECRET_KEY_ACCESS_TOKEN,
-      {
-        expiresIn: "7d",
+      const { email, password } = request.body;
+      console.log('email : ', email);
+      const vendor = await Vendor.findOne({ emailAddress:email });
+      console.log('vendor : ', vendor)
+      if (!vendor) {
+          return response.status(400).json({
+              message: "User not register",
+              error: true,
+              success: false
+          })
       }
-    );
 
-    const vendorData = vendor.toObject();
-    delete vendorData.password;
+      if (vendor.status !== true) {
+          return response.status(400).json({
+              message: "Your status is not active",
+              error: true,
+              success: false
+          })
+      }
 
-    res.status(200).json({
-      error: false,
-      message: "Login successful",
-      token,
-      data: vendorData,
-    });
+      if (vendor.isVerified !== true) {
+          return response.status(400).json({
+              message: "Your Email is not verify yet please verify your email first",
+              error: true,
+              success: false
+          })
+      }
+
+      const checkPassword = await bcryptjs.compare(password, vendor.password);
+
+      if (!checkPassword) {
+          return response.status(400).json({
+              message: "Check your password",
+              error: true,
+              success: false
+          })
+      }
+
+
+      const accesstoken = await generatedAccessToken(vendor._id);
+      const refreshToken = await genertedRefreshToken(vendor._id);
+
+      // const updateUser = await UserModel.findByIdAndUpdate(vendor?._id, {
+      //     last_login_date: new Date()
+      // })
+
+
+      const cookiesOption = {
+          httpOnly: true,
+          secure: true,
+          sameSite: "None"
+      }
+      response.cookie('accessToken', accesstoken, cookiesOption)
+      response.cookie('refreshToken', refreshToken, cookiesOption)
+
+
+      return response.json({
+          message: "Login successfully",
+          error: false,
+          success: true,
+          data: {
+              accesstoken,
+              refreshToken,
+              vendorId: vendor._id
+          }
+      })
   } catch (error) {
-    console.error("Vendor login error:", error);
-    res
-      .status(500)
-      .json({ error: true, message: "Server error: " + error.message });
+      return response.status(500).json({
+          message: error.message || error,
+          error: true,
+          success: false
+      })
   }
-};
+
+}
+
+//get login user details
+async function vendorDetails(request, response) {
+    try {
+        const vendorId = request.vendorId
+
+        const vendor = await Vendor.findById(vendorId).select('-password -refresh_token').populate('address_details')
+
+        return response.json({
+            message: 'user details',
+            data: vendor,
+            error: false,
+            success: true
+        })
+    } catch (error) {
+        return response.status(500).json({
+            message: "Something is wrong",
+            error: true,
+            success: false
+        })
+    }
+}
+
+//logout
+async function logoutVendor(request, response) {
+    try {
+        const vendorId = request.vendorId //middleware
+
+        const cookiesOption = {
+            httpOnly: true,
+            secure: true,
+            sameSite: "None"
+        }
+
+        response.clearCookie("accessToken", cookiesOption)
+        response.clearCookie("refreshToken", cookiesOption)
+
+        const removeRefreshToken = await Vendor.findByIdAndUpdate(vendorId, {
+            refresh_token: ""
+        })
+
+        return response.json({
+            message: "Logout successfully",
+            error: false,
+            success: true
+        })
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        })
+    }
+}
 
 export {
   createVendor,
@@ -371,4 +451,6 @@ export {
   deleteVendor,
   updateVendorStatus,
   loginVendor,
+  logoutVendor,
+  vendorDetails
 };

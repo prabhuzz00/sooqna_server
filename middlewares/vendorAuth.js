@@ -1,17 +1,40 @@
 import jwt from "jsonwebtoken";
 
-const vendorAuth = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ error: true, message: "Unauthorized" });
-  }
-
+const vendorAuth = async (request, response, next) => {
   try {
-    const decoded = jwt.verify(token, process.env.JSON_WEB_TOKEN_SECRET_KEY);
-    req.vendorId = decoded.vendorId;
+    const token =
+      request.cookies.accessToken ||
+      request?.headers?.authorization?.split(" ")[1];
+
+    // if(!token){
+    //    token = request.query.token;
+    // }
+
+    if (!token) {
+      return response.status(401).json({
+        message: "Provide token",
+      });
+    }
+
+    const decode = await jwt.verify(token, process.env.SECRET_KEY_ACCESS_TOKEN);
+
+    if (!decode) {
+      return response.status(401).json({
+        message: "unauthorized access",
+        error: true,
+        success: false,
+      });
+    }
+
+    request.vendorId = decode.id;
+
     next();
   } catch (error) {
-    return res.status(401).json({ error: true, message: "Invalid token" });
+    return response.status(500).json({
+      message: "You have not login", ///error.message || error,
+      error: true,
+      success: false,
+    });
   }
 };
 

@@ -5,10 +5,13 @@ import {
   editVendor,
   getVendors,
   loginVendor,
+  logoutVendor,
   updateVendorStatus,
+  vendorDetails,
   verifyVendor,
 } from "../controllers/vendor.controller.js";
 import multer from "multer";
+import vendorAuth from "../middlewares/vendorAuth.js";
 
 const vendorRouter = express.Router();
 
@@ -41,5 +44,7 @@ vendorRouter.patch(
 vendorRouter.delete("/:id", deleteVendor);
 vendorRouter.patch("/status/:id", updateVendorStatus);
 vendorRouter.post("/login", loginVendor);
+vendorRouter.get('/logout',vendorAuth,logoutVendor);
+vendorRouter.get('/vendor-details',vendorAuth,vendorDetails);
 
 export default vendorRouter;
