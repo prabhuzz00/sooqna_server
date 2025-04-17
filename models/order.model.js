@@ -24,7 +24,10 @@ const orderSchema = new mongoose.Schema({
             },
             subTotal: {
                 type: Number
-            }
+            },
+            vendorId: {
+                type: String
+            },
         }
     ],
     paymentId: {

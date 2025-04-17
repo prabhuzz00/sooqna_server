@@ -1,6 +1,7 @@
 import { Router } from "express";
 import auth from "../middlewares/auth.js";
 import {  captureOrderPaypalController, createOrderController, createOrderPaypalController, deleteOrder, getOrderDetailsController, getTotalOrdersCountController, getUserOrderDetailsController, totalSalesController, totalUsersController, updateOrderStatusController } from "../controllers/order.controller.js";
+import vendorAuth from "../middlewares/vendorAuth.js";
 
 const orderRouter = Router();
 
@@ -12,7 +13,7 @@ orderRouter.put('/order-status/:id',auth,updateOrderStatusController)
 orderRouter.get('/count',auth,getTotalOrdersCountController)
 orderRouter.get('/sales',auth,totalSalesController)
 orderRouter.get('/users',auth,totalUsersController)
-orderRouter.get('/order-list/orders',auth,getUserOrderDetailsController)
+orderRouter.get('/order-list/orders',vendorAuth,getUserOrderDetailsController)
 orderRouter.delete('/deleteOrder/:id',auth,deleteOrder)
 
 export default orderRouter;
