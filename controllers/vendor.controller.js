@@ -394,7 +394,7 @@ async function vendorDetails(request, response) {
     try {
         const vendorId = request.vendorId
 
-        const vendor = await Vendor.findById(vendorId).select('-password -refresh_token').populate('address_details')
+        const vendor = await Vendor.findById(vendorId).select('-password -refresh_token');
 
         return response.json({
             message: 'user details',
@@ -403,6 +403,7 @@ async function vendorDetails(request, response) {
             success: true
         })
     } catch (error) {
+      console.log('error in vendor details : ', error);
         return response.status(500).json({
             message: "Something is wrong",
             error: true,
