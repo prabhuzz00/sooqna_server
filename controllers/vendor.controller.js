@@ -275,6 +275,8 @@ const editVendor = async (req, res) => {
       ownerName,
       emailAddress,
       phoneNumber,
+      storeLogo: imagesArr,
+      storeBanner: bannerImage,
       storeAddress,
       productCategories: productCategories
         ? JSON.parse(productCategories)
