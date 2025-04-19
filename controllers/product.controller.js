@@ -189,6 +189,45 @@ export async function getAllProducts(request, response) {
   }
 }
 
+//get all products by unverified vendor products
+export async function getAllUnverifyProducts(request, response) {
+  try {
+    const { page, limit } = request.query;
+    const totalProducts = await ProductModel.find();
+
+    const products = await ProductModel.find({ isVerified: false })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await ProductModel.countDocuments(products);
+
+    if (!products) {
+      return response.status(400).json({
+        error: true,
+        success: false,
+      });
+    }
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      products: products,
+      total: total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+      totalCount: totalProducts?.length,
+      totalProducts: totalProducts,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
 // get all products for given vendorId
 export async function getAllProductsForVendorId(request, response) {
   try {
@@ -204,21 +243,21 @@ export async function getAllProductsForVendorId(request, response) {
     }
 
     // Find total products for the given vendorId (excluding null vendorId)
-    const totalProducts = await ProductModel.find({ 
-      vendorId: { $eq: vendorId, $ne: null }
+    const totalProducts = await ProductModel.find({
+      vendorId: { $eq: vendorId, $ne: null },
     });
 
     // Find products for the given vendorId with pagination
-    const products = await ProductModel.find({ 
-      vendorId: { $eq: vendorId, $ne: null }
+    const products = await ProductModel.find({
+      vendorId: { $eq: vendorId, $ne: null },
     })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
     // Count total documents for the given vendorId
-    const total = await ProductModel.countDocuments({ 
-      vendorId: { $eq: vendorId, $ne: null }
+    const total = await ProductModel.countDocuments({
+      vendorId: { $eq: vendorId, $ne: null },
     });
 
     if (!products || products.length === 0) {
