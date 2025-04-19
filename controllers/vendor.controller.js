@@ -151,6 +151,7 @@ const createVendor = async (req, res) => {
       password, // Will be hashed by pre-save hook
       phoneNumber,
       storeAddress,
+      balance: 0,
       storeLogo: imagesArr,
       storeBanner: bannerImage,
       productCategories: JSON.parse(productCategories || "[]"),

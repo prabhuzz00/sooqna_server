@@ -9,6 +9,7 @@ const vendorSchema = new mongoose.Schema({
   emailAddress: { type: String, required: true, unique: true },
   password: { type: String, required: true }, // New field
   phoneNumber: { type: String, required: true },
+  balance: { type: Number },
   storeAddress: { type: String, required: true },
   storeLogo: [{ type: String }],
   storeBanner: [{ type: String }],
