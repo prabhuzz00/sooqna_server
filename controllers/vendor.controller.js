@@ -400,9 +400,9 @@ const updateVendorStatus = async (req, res) => {
 //login
 async function loginVendor(request, response) {
   try {
-    const { email, password } = request.body;
-    console.log("email : ", email);
-    const vendor = await Vendor.findOne({ emailAddress: email });
+    const { phoneNumber, password } = request.body;
+    // console.log("email : ", email);
+    const vendor = await Vendor.findOne({ phoneNumber: phoneNumber });
     console.log("vendor : ", vendor);
     if (!vendor) {
       return response.status(400).json({
@@ -422,7 +422,8 @@ async function loginVendor(request, response) {
 
     if (vendor.isVerified !== true) {
       return response.status(400).json({
-        message: "Your Email is not verify yet please verify your email first",
+        message:
+          "Your phoneNumber is not verify yet please verify your phoneNumber first",
         error: true,
         success: false,
       });
