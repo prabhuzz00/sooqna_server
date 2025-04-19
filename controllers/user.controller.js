@@ -104,13 +104,11 @@ export async function verifyEmailController(request, response) {
       user.otp = null;
       user.otpExpires = null;
       await user.save();
-      return response
-        .status(200)
-        .json({
-          error: false,
-          success: true,
-          message: "Email verified successfully",
-        });
+      return response.status(200).json({
+        error: false,
+        success: true,
+        message: "Email verified successfully",
+      });
     } else if (!isCodeValid) {
       return response
         .status(400)
@@ -130,7 +128,7 @@ export async function verifyEmailController(request, response) {
 }
 
 export async function authWithGoogle(request, response) {
-  const { name, email, password, avatar, mobile, role } = request.body;
+  const { name, email, password, avatar, phone, role } = request.body;
 
   try {
     const existingUser = await UserModel.findOne({ email: email });
@@ -138,7 +136,7 @@ export async function authWithGoogle(request, response) {
     if (!existingUser) {
       const user = await UserModel.create({
         name: name,
-        mobile: mobile,
+        phone: phone,
         email: email,
         password: "null",
         avatar: avatar,
@@ -408,7 +406,7 @@ export async function removeImageFromCloudinary(request, response) {
 export async function updateUserDetails(request, response) {
   try {
     const userId = request.userId; //auth middleware
-    const { name, email, mobile, password } = request.body;
+    const { name, email, phone, password } = request.body;
 
     const userExist = await UserModel.findById(userId);
     if (!userExist)
@@ -418,7 +416,7 @@ export async function updateUserDetails(request, response) {
       userId,
       {
         name: name,
-        mobile: mobile,
+        phone: phone,
         email: email,
       },
       { new: true }
@@ -432,7 +430,7 @@ export async function updateUserDetails(request, response) {
         name: updateUser?.name,
         _id: updateUser?._id,
         email: updateUser?.email,
-        mobile: updateUser?.mobile,
+        phone: updateUser?.phone,
         avatar: updateUser?.avatar,
       },
     });

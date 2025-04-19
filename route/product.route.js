@@ -44,6 +44,7 @@ import {
 } from "../controllers/product.controller.js";
 
 import { removeImageFromCloudinary } from "../controllers/category.controller.js";
+import vendorAuth from "../middlewares/vendorAuth.js";
 
 const productRouter = Router();
 
@@ -54,9 +55,21 @@ productRouter.post(
   upload.array("bannerimages"),
   uploadBannerImages
 );
+productRouter.post(
+  "/vendorProductImagesUpload",
+  vendorAuth,
+  upload.array("images"),
+  uploadImages
+);
+productRouter.post(
+  "/vendorProductBannerImagesUpload",
+  vendorAuth,
+  upload.array("bannerimages"),
+  uploadBannerImages
+);
+productRouter.get("/getAllVendorUnverifyProducts", getAllUnverifyProducts);
 productRouter.post("/create", auth, createProduct);
 productRouter.get("/getAllProducts", getAllProducts);
-productRouter.get("/getAllVendorUnverifyProducts", getAllUnverifyProducts);
 productRouter.get("/getAllProductsForVendorId", getAllProductsForVendorId);
 productRouter.get("/getAllProductsBanners", getAllProductsBanners);
 productRouter.get("/getAllProductsByCatId/:id", getAllProductsByCatId);
@@ -79,6 +92,11 @@ productRouter.delete("/deleteMultiple", deleteMultipleProduct);
 productRouter.delete("/:id", auth, deleteProduct);
 productRouter.get("/:id", getProduct);
 productRouter.delete("/deteleImage", auth, removeImageFromCloudinary);
+productRouter.delete(
+  "/deleteVendorImage",
+  vendorAuth,
+  removeImageFromCloudinary
+);
 productRouter.put("/updateProduct/:id", auth, updateProduct);
 
 productRouter.post("/productRAMS/create", auth, createProductRAMS);
