@@ -38,14 +38,14 @@ vendorRouter.get("/logout", vendorAuth, logoutVendor);
 vendorRouter.get("/vendor-details", vendorAuth, vendorDetails);
 vendorRouter.post(
   "/uploadImages",
-  vendorAuth,
+  // vendorAuth,
   upload.array("images"),
   uploadImages
 );
 vendorRouter.post(
   "/uploadBannerImages",
-  vendorAuth,
-  upload.array("bannerimages"),
+  // vendorAuth,
+  upload.array("bannerImages"),
   uploadBannerImages
 );
 
