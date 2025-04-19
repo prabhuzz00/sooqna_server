@@ -10,8 +10,8 @@ const vendorSchema = new mongoose.Schema({
   password: { type: String, required: true }, // New field
   phoneNumber: { type: String, required: true },
   storeAddress: { type: String, required: true },
-  storeLogo: { type: String },
-  storeBanner: { type: String },
+  storeLogo: [{ type: String }],
+  storeBanner: [{ type: String }],
   productCategories: { type: [String], default: [] },
   commissionRate: { type: Number, required: true },
   paymentDetails: { type: String, required: true },

@@ -189,6 +189,65 @@ export async function getAllProducts(request, response) {
   }
 }
 
+// get all products for given vendorId
+export async function getAllProductsForVendorId(request, response) {
+  try {
+    const { vendorId, page = 1, limit = 10 } = request.query;
+
+    // Validate vendorId
+    if (!vendorId) {
+      return response.status(400).json({
+        error: true,
+        success: false,
+        message: "vendorId is required",
+      });
+    }
+
+    // Find total products for the given vendorId (excluding null vendorId)
+    const totalProducts = await ProductModel.find({ 
+      vendorId: { $eq: vendorId, $ne: null }
+    });
+
+    // Find products for the given vendorId with pagination
+    const products = await ProductModel.find({ 
+      vendorId: { $eq: vendorId, $ne: null }
+    })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    // Count total documents for the given vendorId
+    const total = await ProductModel.countDocuments({ 
+      vendorId: { $eq: vendorId, $ne: null }
+    });
+
+    if (!products || products.length === 0) {
+      return response.status(404).json({
+        error: true,
+        success: false,
+        message: "No products found for this vendorId",
+      });
+    }
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      products: products,
+      total: total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+      totalCount: totalProducts.length,
+      totalProducts: totalProducts,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || "An error occurred",
+      error: true,
+      success: false,
+    });
+  }
+}
+
 //get all products by category id
 export async function getAllProductsByCatId(request, response) {
   try {
