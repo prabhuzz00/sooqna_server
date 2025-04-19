@@ -42,6 +42,7 @@ import {
   getAllProductsForVendorId,
 } from "../controllers/product.controller.js";
 
+<<<<<<< HEAD
 import { removeImageFromCloudinary } from "../controllers/category.controller.js";
 
 const productRouter = Router();
@@ -79,6 +80,37 @@ productRouter.delete("/:id", auth, deleteProduct);
 productRouter.get("/:id", getProduct);
 productRouter.delete("/deteleImage", auth, removeImageFromCloudinary);
 productRouter.put("/updateProduct/:id", auth, updateProduct);
+=======
+import {removeImageFromCloudinary} from '../controllers/category.controller.js';
+import vendorAuth from '../middlewares/vendorAuth.js';
+
+const productRouter = Router();
+
+productRouter.post('/uploadImages',auth,upload.array('images'),uploadImages);
+productRouter.post('/uploadBannerImages',auth,upload.array('bannerimages'),uploadBannerImages);
+productRouter.post('/vendorProductImagesUpload',vendorAuth,upload.array('images'),uploadImages);
+productRouter.post('/vendorProductBannerImagesUpload',vendorAuth,upload.array('bannerimages'),uploadBannerImages);
+productRouter.post('/create',auth,createProduct);
+productRouter.get('/getAllProducts',getAllProducts);
+productRouter.get('/getAllProductsForVendorId', getAllProductsForVendorId);
+productRouter.get('/getAllProductsBanners',getAllProductsBanners);
+productRouter.get('/getAllProductsByCatId/:id',getAllProductsByCatId);
+productRouter.get('/getAllProductsByCatName',getAllProductsByCatName);
+productRouter.get('/getAllProductsBySubCatId/:id',getAllProductsBySubCatId);
+productRouter.get('/getAllProductsBySubCatName',getAllProductsBySubCatName);
+productRouter.get('/getAllProductsByThirdLavelCat/:id',getAllProductsByThirdLavelCatId);
+productRouter.get('/getAllProductsByThirdLavelCatName',getAllProductsBySubCatName);
+productRouter.get('/getAllProductsByPrice',getAllProductsByPrice);
+productRouter.get('/getAllProductsByRating',getAllProductsByRating);
+productRouter.get('/getAllProductsCount',getProductsCount);
+productRouter.get('/getAllFeaturedProducts',getAllFeaturedProducts);
+productRouter.delete('/deleteMultiple',deleteMultipleProduct);
+productRouter.delete('/:id',auth,deleteProduct);
+productRouter.get('/:id',getProduct);
+productRouter.delete('/deteleImage',auth,removeImageFromCloudinary);
+productRouter.delete('/deleteVendorImage',vendorAuth,removeImageFromCloudinary);
+productRouter.put('/updateProduct/:id',auth,updateProduct);
+>>>>>>> 5766b4e8eb0cac3850ddde0c69ad52a0fd8844f5
 
 productRouter.post("/productRAMS/create", auth, createProductRAMS);
 productRouter.delete("/productRAMS/:id", auth, deleteProductRAMS);
