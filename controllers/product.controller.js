@@ -189,6 +189,33 @@ export async function getAllProducts(request, response) {
   }
 }
 
+export const verifyProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await ProductModel.findByIdAndUpdate(
+      id,
+      { isVerified: true },
+      { new: true, select: "-password" } // Exclude password
+    );
+
+    if (!product) {
+      return res.status(404).json({ error: true, message: "Vendor not found" });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "Product verified successfully",
+      data: product,
+    });
+  } catch (error) {
+    console.error("Verify product error:", error);
+    res
+      .status(500)
+      .json({ error: true, message: "Server error: " + error.message });
+  }
+};
+
 //get all products by unverified vendor products
 export async function getAllUnverifyProducts(request, response) {
   try {
