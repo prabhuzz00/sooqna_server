@@ -30,11 +30,7 @@ orderRouter.put("/order-status/:id", auth, updateOrderStatusController);
 orderRouter.get("/count", auth, getTotalOrdersCountController);
 orderRouter.get("/sales", auth, totalSalesController);
 orderRouter.get("/users", auth, totalUsersController);
-orderRouter.get(
-  "/order-list/orders",
-  vendorAuth,
-  getUserOrderDetailsController
-);
+orderRouter.get("/order-list/orders", auth, getUserOrderDetailsController);
 orderRouter.delete("/deleteOrder/:id", auth, deleteOrder);
 
 export default orderRouter;
