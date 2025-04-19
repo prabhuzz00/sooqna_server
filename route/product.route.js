@@ -4,11 +4,14 @@ import upload from '../middlewares/multer.js';
 import {createProduct, createProductRAMS, deleteMultipleProduct, deleteProduct, deleteProductRAMS, getAllFeaturedProducts, getAllProducts, getAllProductsByCatId, getAllProductsByCatName, getAllProductsByPrice, getAllProductsByRating, getAllProductsBySubCatId, getAllProductsBySubCatName, getAllProductsByThirdLavelCatId, getProduct, getProductRams, getProductsCount, updateProduct, updateProductRam, uploadImages, getProductRamsById, createProductWEIGHT, deleteProductWEIGHT, updateProductWeight, getProductWeight, getProductWeightById, createProductSize, deleteProductSize, updateProductSize, getProductSize, getProductSizeById, uploadBannerImages, getAllProductsBanners, filters, sortBy, searchProductController, getAllProductsForVendorId} from '../controllers/product.controller.js';
 
 import {removeImageFromCloudinary} from '../controllers/category.controller.js';
+import vendorAuth from '../middlewares/vendorAuth.js';
 
 const productRouter = Router();
 
 productRouter.post('/uploadImages',auth,upload.array('images'),uploadImages);
 productRouter.post('/uploadBannerImages',auth,upload.array('bannerimages'),uploadBannerImages);
+productRouter.post('/vendorProductImagesUpload',vendorAuth,upload.array('images'),uploadImages);
+productRouter.post('/vendorProductBannerImagesUpload',vendorAuth,upload.array('bannerimages'),uploadBannerImages);
 productRouter.post('/create',auth,createProduct);
 productRouter.get('/getAllProducts',getAllProducts);
 productRouter.get('/getAllProductsForVendorId', getAllProductsForVendorId);
@@ -27,6 +30,7 @@ productRouter.delete('/deleteMultiple',deleteMultipleProduct);
 productRouter.delete('/:id',auth,deleteProduct);
 productRouter.get('/:id',getProduct);
 productRouter.delete('/deteleImage',auth,removeImageFromCloudinary);
+productRouter.delete('/deleteVendorImage',vendorAuth,removeImageFromCloudinary);
 productRouter.put('/updateProduct/:id',auth,updateProduct);
 
 productRouter.post('/productRAMS/create',auth,createProductRAMS);
