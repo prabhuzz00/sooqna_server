@@ -19,6 +19,9 @@ import blogRouter from "./route/blog.route.js";
 import orderRouter from "./route/order.route.js";
 import logoRouter from "./route/logo.route.js";
 import vendorRouter from "./route/vendor.route.js";
+import brandRouter from "./route/brand.route.js";
+import tagRouter from "./route/tag.route.js";
+import labelRouter from "./route/label.route.js";
 
 const app = express();
 app.use(cors());
@@ -53,6 +56,9 @@ app.use("/api/blog", blogRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/logo", logoRouter);
 app.use("/api/vendor", vendorRouter);
+app.use("/api/tags", tagRouter);
+app.use("/api/labels", labelRouter);
+app.use("/api/brands", brandRouter);
 
 connectDB().then(() => {
   app.listen(process.env.PORT, () => {

@@ -92,7 +92,9 @@ export async function createProduct(request, response) {
   try {
     let product = new ProductModel({
       name: request.body.name,
+      arbName: request.body.arbName,
       description: request.body.description,
+      arbDescription: request.body.arbDescription,
       images: imagesArr,
       bannerimages: bannerImage,
       bannerTitleName: request.body.bannerTitleName,
@@ -116,6 +118,7 @@ export async function createProduct(request, response) {
       productWeight: request.body.productWeight,
       isVerified: request.body.isVerified,
       vendorId: request.body.vendorId,
+      barcode: request.body.barcode,
     });
 
     product = await product.save();
@@ -153,7 +156,7 @@ export async function getAllProducts(request, response) {
     const { page, limit } = request.query;
     const totalProducts = await ProductModel.find();
 
-    const products = await ProductModel.find()
+    const products = await ProductModel.find({ isVerified: true })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
@@ -849,6 +852,8 @@ export async function updateProduct(request, response) {
         name: request.body.name,
         subCat: request.body.subCat,
         description: request.body.description,
+        arbName: request.body.arbName,
+        arbDescription: request.body.arbDescription,
         bannerimages: request.body.bannerimages,
         bannerTitleName: request.body.bannerTitleName,
         isDisplayOnHomeBanner: request.body.isDisplayOnHomeBanner,
@@ -872,6 +877,7 @@ export async function updateProduct(request, response) {
         productWeight: request.body.productWeight,
         isVerified: request.body.isVerified,
         vendorId: request.body.vendorId,
+        barcode: request.body.barcode,
       },
       { new: true }
     );

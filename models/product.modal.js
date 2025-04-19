@@ -6,7 +6,14 @@ const productSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    arbName: {
+      type: String,
+    },
     description: {
+      type: String,
+      required: true,
+    },
+    arbDescription: {
       type: String,
       required: true,
     },
@@ -114,6 +121,9 @@ const productSchema = mongoose.Schema(
     vendorId: {
       type: String,
       default: null,
+    },
+    barcode: {
+      type: String,
     },
   },
   {

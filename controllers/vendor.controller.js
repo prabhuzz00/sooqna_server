@@ -311,16 +311,17 @@ const updateVendorStatus = async (req, res) => {
 //login
 const loginVendor = async (req, res) => {
   try {
-    const { emailAddress, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!emailAddress || !password) {
+    if (!email || !password) {
       return res.status(400).json({
         error: true,
         message: "Email and password are required",
       });
     }
-
-    const vendor = await Vendor.findOne({ emailAddress });
+    const vendors = await Vendor.find();
+    console.log("vendors :");
+    const vendor = await Vendor.findOne({ emailAddress: email });
 
     if (!vendor) {
       return res.status(404).json({
@@ -348,7 +349,7 @@ const loginVendor = async (req, res) => {
 
     const vendorData = vendor.toObject();
     delete vendorData.password;
-
+    console.log("vendor data : ", vendorData);
     res.status(200).json({
       error: false,
       message: "Login successful",
