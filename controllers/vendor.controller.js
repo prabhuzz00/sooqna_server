@@ -279,7 +279,7 @@ const editVendor = async (req, res) => {
       productCategories: productCategories
         ? JSON.parse(productCategories)
         : undefined,
-      commissionRate: commissionRate ? Number(commissionRate) : undefined,
+      // commissionRate: commissionRate ? Number(commissionRate) : undefined,
       paymentDetails,
       taxIdentificationNumber,
       termsAgreement: termsAgreement === "true" || termsAgreement === true,
