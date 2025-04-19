@@ -108,7 +108,7 @@ export async function getOrderDetailsController(request, response) {
 export async function getVendorOrderDetailsController(request, response) {
   try {
     const userId = request.userId; // Assuming this is the authenticated user's ID
-    const vendorId = request.body.id; // Vendor ID to filter orders
+    const vendorId = request.body.vendorId; // Vendor ID to filter orders
     const { page = 1, limit = 10 } = request.query; // Default values for pagination
 
     // Validate vendorId

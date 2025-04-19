@@ -2,10 +2,94 @@
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Vendor from "../models/vendor.model.js";
-import { v2 as cloudinary } from "cloudinary";
-import fs from "fs/promises";
+// import { v2 as cloudinary } from "cloudinary";
+// import fs from "fs/promises";
 import generatedAccessToken from "../utils/generatedAccessToken.js";
 import genertedRefreshToken from "../utils/generatedRefreshToken.js";
+
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs";
+import { request } from "http";
+
+cloudinary.config({
+  cloud_name: process.env.cloudinary_Config_Cloud_Name,
+  api_key: process.env.cloudinary_Config_api_key,
+  api_secret: process.env.cloudinary_Config_api_secret,
+  secure: true,
+});
+
+//image upload
+var imagesArr = [];
+export async function uploadImages(request, response) {
+  try {
+    imagesArr = [];
+
+    const image = request.files;
+
+    const options = {
+      use_filename: true,
+      unique_filename: false,
+      overwrite: false,
+    };
+
+    for (let i = 0; i < image?.length; i++) {
+      const img = await cloudinary.uploader.upload(
+        image[i].path,
+        options,
+        function (error, result) {
+          imagesArr.push(result.secure_url);
+          fs.unlinkSync(`uploads/${request.files[i].filename}`);
+        }
+      );
+    }
+
+    return response.status(200).json({
+      images: imagesArr,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+var bannerImage = [];
+export async function uploadBannerImages(request, response) {
+  try {
+    bannerImage = [];
+
+    const image = request.files;
+
+    const options = {
+      use_filename: true,
+      unique_filename: false,
+      overwrite: false,
+    };
+
+    for (let i = 0; i < image?.length; i++) {
+      const img = await cloudinary.uploader.upload(
+        image[i].path,
+        options,
+        function (error, result) {
+          bannerImage.push(result.secure_url);
+          fs.unlinkSync(`uploads/${request.files[i].filename}`);
+        }
+      );
+    }
+
+    return response.status(200).json({
+      images: bannerImage,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
 
 const createVendor = async (req, res) => {
   try {
@@ -67,8 +151,8 @@ const createVendor = async (req, res) => {
       password, // Will be hashed by pre-save hook
       phoneNumber,
       storeAddress,
-      storeLogo: storeLogoUrl,
-      storeBanner: storeBannerUrl,
+      storeLogo: imagesArr,
+      storeBanner: bannerImage,
       productCategories: JSON.parse(productCategories || "[]"),
       commissionRate: Number(commissionRate),
       paymentDetails,
@@ -202,27 +286,27 @@ const editVendor = async (req, res) => {
       status: status === "true" || status === true,
     };
 
-    if (req.files?.storeLogo) {
-      const logoResult = await cloudinary.uploader.upload(
-        req.files.storeLogo.tempFilePath,
-        {
-          folder: "vendor_logos",
-        }
-      );
-      updateData.storeLogo = logoResult.secure_url;
-      await fs.unlink(req.files.storeLogo.tempFilePath);
-    }
+    // if (req.files?.storeLogo) {
+    //   const logoResult = await cloudinary.uploader.upload(
+    //     req.files.storeLogo.tempFilePath,
+    //     {
+    //       folder: "vendor_logos",
+    //     }
+    //   );
+    //   updateData.storeLogo = logoResult.secure_url;
+    //   await fs.unlink(req.files.storeLogo.tempFilePath);
+    // }
 
-    if (req.files?.storeBanner) {
-      const bannerResult = await cloudinary.uploader.upload(
-        req.files.storeBanner.tempFilePath,
-        {
-          folder: "vendor_banners",
-        }
-      );
-      updateData.storeBanner = bannerResult.secure_url;
-      await fs.unlink(req.files.storeBanner.tempFilePath);
-    }
+    // if (req.files?.storeBanner) {
+    //   const bannerResult = await cloudinary.uploader.upload(
+    //     req.files.storeBanner.tempFilePath,
+    //     {
+    //       folder: "vendor_banners",
+    //     }
+    //   );
+    //   updateData.storeBanner = bannerResult.secure_url;
+    //   await fs.unlink(req.files.storeBanner.tempFilePath);
+    // }
 
     // Remove undefined fields
     Object.keys(updateData).forEach(
