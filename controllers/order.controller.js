@@ -356,8 +356,9 @@ export const updateOrderStatusController = async (request, response) => {
         console.warn(`Vendor with ID ${vendorId} not found`);
         continue;
       }
-
+     
       const commissionRate = vendor.commissionRate || 0;
+      // console.log('commissionRate : ', commissionRate)
       const netAmount = totalPrice - (commissionRate / 100) * totalPrice;
 
       if (order_status === "confirm") {
