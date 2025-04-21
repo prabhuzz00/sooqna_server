@@ -1,4 +1,5 @@
 import OrderModel from "../models/order.model.js";
+import VendorModel from "../models/vendor.model.js"; 
 import ProductModel from "../models/product.modal.js";
 import UserModel from "../models/user.model.js";
 import paypal from "@paypal/checkout-server-sdk";
@@ -320,27 +321,83 @@ export const captureOrderPaypalController = async (request, response) => {
   }
 };
 
+
+
 export const updateOrderStatusController = async (request, response) => {
   try {
     const { id, order_status } = request.body;
+    console.log("order status received:", order_status);
 
+    const order = await OrderModel.findById(id);
+    if (!order) {
+      return response.status(404).json({
+        message: "Order not found",
+        success: false,
+        error: true,
+      });
+    }
+
+    const vendorMap = new Map(); // vendorId -> totalPrice
+
+    order.products.forEach((product) => {
+      const { vendorId, price } = product;
+      if (!vendorId || !price) return;
+
+      if (!vendorMap.has(vendorId)) {
+        vendorMap.set(vendorId, 0);
+      }
+
+      vendorMap.set(vendorId, vendorMap.get(vendorId) + price);
+    });
+
+    for (const [vendorId, totalPrice] of vendorMap.entries()) {
+      const vendor = await VendorModel.findById(vendorId);
+      if (!vendor) {
+        console.warn(`Vendor with ID ${vendorId} not found`);
+        continue;
+      }
+
+      const commissionRate = vendor.commissionRate || 0;
+      const netAmount = totalPrice - (commissionRate / 100) * totalPrice;
+
+      if (order_status === "confirm") {
+        const newDueBalance = (vendor.dueBalance || 0) + netAmount;
+
+        await VendorModel.findByIdAndUpdate(vendorId, {
+          dueBalance: newDueBalance,
+        });
+
+        console.log(`Vendor ${vendorId} CONFIRMED: Added ${netAmount} to dueBalance`);
+      }
+
+      if (order_status === "delivered") {
+        const newDueBalance = Math.max((vendor.dueBalance || 0) - netAmount, 0);
+        const newAvailableBalance = (vendor.availableBalance || 0) + netAmount;
+
+        await VendorModel.findByIdAndUpdate(vendorId, {
+          dueBalance: newDueBalance,
+          availableBalance: newAvailableBalance,
+        });
+
+        console.log(`Vendor ${vendorId} DELIVERED: Moved ${netAmount} from due to available balance`);
+      }
+    }
+
+    // Update the order status
     const updateOrder = await OrderModel.updateOne(
-      {
-        _id: id,
-      },
-      {
-        order_status: order_status,
-      },
+      { _id: id },
+      { order_status },
       { new: true }
     );
 
     return response.json({
-      message: "Update order status",
+      message: "Order status updated successfully",
       success: true,
       error: false,
       data: updateOrder,
     });
   } catch (error) {
+    console.error("Error updating order status:", error);
     return response.status(500).json({
       message: error.message || error,
       error: true,
@@ -348,6 +405,38 @@ export const updateOrderStatusController = async (request, response) => {
     });
   }
 };
+
+
+
+
+// export const _updateOrderStatusController = async (request, response) => {
+//   try {
+//     const { id, order_status } = request.body;
+//     console.log('order status received : ', order_status)
+//     const updateOrder = await OrderModel.updateOne(
+//       {
+//         _id: id,
+//       },
+//       {
+//         order_status: order_status,
+//       },
+//       { new: true }
+//     );
+
+//     return response.json({
+//       message: "Update order status",
+//       success: true,
+//       error: false,
+//       data: updateOrder,
+//     });
+//   } catch (error) {
+//     return response.status(500).json({
+//       message: error.message || error,
+//       error: true,
+//       success: false,
+//     });
+//   }
+// };
 
 export const totalSalesController = async (request, response) => {
   try {
