@@ -1,5 +1,5 @@
 import OrderModel from "../models/order.model.js";
-import VendorModel from "../models/vendor.model.js"; 
+import VendorModel from "../models/vendor.model.js";
 import ProductModel from "../models/product.modal.js";
 import UserModel from "../models/user.model.js";
 import paypal from "@paypal/checkout-server-sdk";
@@ -81,6 +81,72 @@ export async function getOrderDetailsController(request, response) {
     const { page, limit } = request.query;
 
     const orderlist = await OrderModel.find()
+      .sort({ createdAt: -1 })
+      .populate("delivery_address userId")
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await OrderModel.countDocuments(orderlist);
+
+    return response.json({
+      message: "order list",
+      data: orderlist,
+      error: false,
+      success: true,
+      total: total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+//get pending order
+export async function getPendingOrderController(request, response) {
+  try {
+    const userId = request.userId; // order id
+
+    const { page, limit } = request.query;
+
+    const orderlist = await OrderModel.find({ order_status: "pending" })
+      .sort({ createdAt: -1 })
+      .populate("delivery_address userId")
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await OrderModel.countDocuments(orderlist);
+
+    return response.json({
+      message: "order list",
+      data: orderlist,
+      error: false,
+      success: true,
+      total: total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+//get order return
+export async function getOrderReturnController(request, response) {
+  try {
+    const userId = request.userId; // order id
+
+    const { page, limit } = request.query;
+
+    const orderlist = await OrderModel.find({ order_status: "canceled" })
       .sort({ createdAt: -1 })
       .populate("delivery_address userId")
       .skip((page - 1) * limit)
@@ -321,8 +387,6 @@ export const captureOrderPaypalController = async (request, response) => {
   }
 };
 
-
-
 export const updateOrderStatusController = async (request, response) => {
   try {
     const { id, order_status } = request.body;
@@ -356,7 +420,7 @@ export const updateOrderStatusController = async (request, response) => {
         console.warn(`Vendor with ID ${vendorId} not found`);
         continue;
       }
-     
+
       const commissionRate = vendor.commissionRate || 0;
       // console.log('commissionRate : ', commissionRate)
       const netAmount = totalPrice - (commissionRate / 100) * totalPrice;
@@ -368,7 +432,9 @@ export const updateOrderStatusController = async (request, response) => {
           dueBalance: newDueBalance,
         });
 
-        console.log(`Vendor ${vendorId} CONFIRMED: Added ${netAmount} to dueBalance`);
+        console.log(
+          `Vendor ${vendorId} CONFIRMED: Added ${netAmount} to dueBalance`
+        );
       }
 
       if (order_status === "delivered") {
@@ -380,7 +446,9 @@ export const updateOrderStatusController = async (request, response) => {
           availableBalance: newAvailableBalance,
         });
 
-        console.log(`Vendor ${vendorId} DELIVERED: Moved ${netAmount} from due to available balance`);
+        console.log(
+          `Vendor ${vendorId} DELIVERED: Moved ${netAmount} from due to available balance`
+        );
       }
     }
 
@@ -406,9 +474,6 @@ export const updateOrderStatusController = async (request, response) => {
     });
   }
 };
-
-
-
 
 // export const _updateOrderStatusController = async (request, response) => {
 //   try {
