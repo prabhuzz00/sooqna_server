@@ -41,8 +41,14 @@ const orderSchema = new mongoose.Schema(
     },
     order_status: {
       type: String,
-      default: "pending",
+      default: "Pending",
     },
+    statusHistory: [
+      {
+        status: { type: String },
+        updatedAt: { type: Date, default: Date.now },
+      },
+    ],
     delivery_address: {
       type: mongoose.Schema.ObjectId,
       ref: "address",
@@ -50,6 +56,9 @@ const orderSchema = new mongoose.Schema(
     totalAmt: {
       type: Number,
       default: 0,
+    },
+    barcode: {
+      type: String,
     },
   },
   {

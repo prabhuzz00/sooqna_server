@@ -6,11 +6,12 @@ const userSchema = mongoose.Schema(
       type: String,
       required: [true, "Provide name"],
     },
-    email: {
-      type: String,
-      required: [true, "Provide email"],
-      unique: true,
-    },
+    // email: {
+    //   type: String,
+    //   default: "",
+    //   // required: [true, "Provide email"],
+    //   // unique: true,
+    // },
     password: {
       type: String,
       required: [true, "Provide password"],
@@ -21,12 +22,13 @@ const userSchema = mongoose.Schema(
     },
     phone: {
       type: Number,
-      default: null,
+      required: [true, "Provide Phone Number"],
+      unique: true,
     },
-    verify_email: {
-      type: Boolean,
-      default: false,
-    },
+    // verify_email: {
+    //   type: Boolean,
+    //   default: false,
+    // },
     access_token: {
       type: String,
       default: "",
@@ -56,12 +58,12 @@ const userSchema = mongoose.Schema(
         ref: "order",
       },
     ],
-    otp: {
-      type: String,
-    },
-    otpExpires: {
-      type: Date,
-    },
+    // otp: {
+    //   type: String,
+    // },
+    // otpExpires: {
+    //   type: Date,
+    // },
     role: {
       type: String,
       enum: ["ADMIN", "USER"],

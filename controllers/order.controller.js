@@ -15,6 +15,7 @@ export const createOrderController = async (request, response) => {
       payment_status: request.body.payment_status,
       delivery_address: request.body.delivery_address,
       totalAmt: request.body.totalAmt,
+      barcode: request.body.barcode,
       date: request.body.date,
     });
 
@@ -52,12 +53,12 @@ export const createOrderController = async (request, response) => {
     recipients.push(user?.email);
 
     // Send verification email
-    await sendEmailFun({
-      sendTo: recipients,
-      subject: "Order Confirmation",
-      text: "",
-      html: OrderConfirmationEmail(user?.name, order),
-    });
+    // await sendEmailFun({
+    //   sendTo: recipients,
+    //   subject: "Order Confirmation",
+    //   text: "",
+    //   html: OrderConfirmationEmail(user?.name, order),
+    // });
 
     return response.status(200).json({
       error: false,
@@ -452,10 +453,18 @@ export const updateOrderStatusController = async (request, response) => {
       }
     }
 
-    // Update the order status
-    const updateOrder = await OrderModel.updateOne(
-      { _id: id },
-      { order_status },
+    // Now update the Order in one shot: (order_status + push statusHistory)
+    const updateOrder = await OrderModel.findByIdAndUpdate(
+      id,
+      {
+        order_status,
+        $push: {
+          statusHistory: {
+            status: order_status,
+            updatedAt: new Date(),
+          },
+        },
+      },
       { new: true }
     );
 

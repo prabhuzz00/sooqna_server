@@ -21,20 +21,20 @@ export async function registerUserController(request, response) {
   try {
     let user;
 
-    const { name, email, password } = request.body;
-    if (!name || !email || !password) {
+    const { name, phone, password } = request.body;
+    if (!name || !phone || !password) {
       return response.status(400).json({
-        message: "provide email, name, password",
+        message: "provide phone, name, password",
         error: true,
         success: false,
       });
     }
 
-    user = await UserModel.findOne({ email: email });
+    user = await UserModel.findOne({ phone: phone });
 
     if (user) {
       return response.json({
-        message: "User already Registered with this email",
+        message: "User already Registered with this Phone Number",
         error: true,
         success: false,
       });
@@ -46,34 +46,34 @@ export async function registerUserController(request, response) {
     const hashPassword = await bcryptjs.hash(password, salt);
 
     user = new UserModel({
-      email: email,
+      phone: phone,
       password: hashPassword,
       name: name,
-      otp: verifyCode,
-      verify_email: true,
-      otpExpires: Date.now() + 600000,
+      // otp: verifyCode,
+      // verify_email: true,
+      // otpExpires: Date.now() + 600000,
     });
 
     await user.save();
 
     // Send verification email
-    await sendEmailFun({
-      sendTo: email,
-      subject: "Verify email from Ecommerce App",
-      text: "",
-      html: VerificationEmail(name, verifyCode),
-    });
+    // await sendEmailFun({
+    //   sendTo: email,
+    //   subject: "Verify email from Ecommerce App",
+    //   text: "",
+    //   html: VerificationEmail(name, verifyCode),
+    // });
 
     // Create a JWT token for verification purposes
     const token = jwt.sign(
-      { email: user.email, id: user._id },
+      { phone: user.phone, id: user._id },
       process.env.JSON_WEB_TOKEN_SECRET_KEY
     );
 
     return response.status(200).json({
       success: true,
       error: false,
-      message: "User registered successfully! Please verify your email.",
+      message: "User registered successfully! Please verify your PhoneNumber.",
       token: token, // Optional: include this if needed for verification
     });
   } catch (error) {
@@ -137,7 +137,7 @@ export async function authWithGoogle(request, response) {
       const user = await UserModel.create({
         name: name,
         phone: phone,
-        email: email,
+        // email: email,
         password: "null",
         avatar: avatar,
         role: role,
@@ -228,9 +228,9 @@ export async function loginUserController(request, response) {
       });
     }
 
-    if (user.verify_email !== true) {
+    if (user.phone == null) {
       return response.status(400).json({
-        message: "Your Email is not verify yet please verify your email first",
+        message: "Your Phone is not verify yet please verify your Phone first",
         error: true,
         success: false,
       });
