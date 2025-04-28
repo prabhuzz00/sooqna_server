@@ -137,7 +137,7 @@ export async function authWithGoogle(request, response) {
       const user = await UserModel.create({
         name: name,
         phone: phone,
-        // email: email,
+        email: email,
         password: "null",
         avatar: avatar,
         role: role,
