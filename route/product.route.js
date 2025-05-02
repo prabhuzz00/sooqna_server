@@ -119,6 +119,6 @@ productRouter.get("/productSize/:id", getProductSizeById);
 
 productRouter.post("/filters", filters);
 productRouter.post("/sortBy", sortBy);
-productRouter.post("/search/get", searchProductController);
+productRouter.get("/search/get", searchProductController);
 productRouter.patch("/verify/:id", verifyProduct);
 export default productRouter;
