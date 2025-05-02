@@ -8,8 +8,8 @@ const userSchema = mongoose.Schema(
     },
     email: {
       type: String,
-      // required: [true, "Provide email"],
-      // unique: true,
+      required: [true, "Provide email"],
+      unique: true,
     },
     password: {
       type: String,
@@ -72,9 +72,27 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    locationPermission: {
+      type: Boolean,
+      default: false,
+    },
+    currentLocation: {
+      type: {
+        type: String, // Don't do `{ location: { type: String } }`
+        enum: ['Point'], // 'location.type' must be 'Point'
+        default: 'Point'
+      },
+      coordinates: {
+        type: [Number], // Array of numbers for longitude and latitude
+        default: [0, 0] // Default coordinates [longitude, latitude]
+      }
+    },
   },
   { timestamps: true }
 );
+
+// Add 2dsphere index for efficient geospatial queries
+userSchema.index({ currentLocation: '2dsphere' });
 
 const UserModel = mongoose.model("User", userSchema);
 

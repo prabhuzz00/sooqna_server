@@ -21,20 +21,27 @@ export async function registerUserController(request, response) {
   try {
     let user;
 
-    const { name, phone, password } = request.body;
-    if (!name || !phone || !password) {
+    // Include email in destructuring
+    const { name, email, phone, password } = request.body;
+    // Add email to validation check
+    if (!name || !email || !phone || !password) {
       return response.status(400).json({
-        message: "provide phone, name, password",
+        message: "provide name, email, phone, password",
         error: true,
         success: false,
       });
     }
 
-    user = await UserModel.findOne({ phone: phone });
+    // Check if user exists by email OR phone
+    user = await UserModel.findOne({ $or: [{ email: email }, { phone: phone }] });
 
     if (user) {
+      // Adjust message based on which field is duplicated
+      const message = user.email === email
+        ? "User already Registered with this Email"
+        : "User already Registered with this Phone Number";
       return response.json({
-        message: "User already Registered with this Phone Number",
+        message: message,
         error: true,
         success: false,
       });
@@ -46,11 +53,12 @@ export async function registerUserController(request, response) {
     const hashPassword = await bcryptjs.hash(password, salt);
 
     user = new UserModel({
+      name: name,
+      email: email, 
       phone: phone,
       password: hashPassword,
-      name: name,
       // otp: verifyCode,
-      // verify_email: true,
+      // verify_email: false, // Keep email unverified initially if using OTP later
       // otpExpires: Date.now() + 600000,
     });
 
@@ -79,6 +87,57 @@ export async function registerUserController(request, response) {
   } catch (error) {
     return response.status(500).json({
       message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+// Update user location
+export async function updateUserLocation(request, response) {
+  try {
+    const userId = request.userId; // From auth middleware
+    const { latitude, longitude } = request.body; // Assuming these are sent
+
+    if (latitude === undefined || longitude === undefined) {
+      return response.status(400).json({
+        message: "Please provide latitude and longitude.",
+        error: true,
+        success: false,
+      });
+    }
+
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      {
+        currentLocation: {
+          type: "Point",
+          coordinates: [longitude, latitude], // GeoJSON format: [longitude, latitude]
+        },
+      },
+      { new: true } // Return the updated document
+    );
+
+    if (!user) {
+      return response.status(404).json({
+        message: "User not found.",
+        error: true,
+        success: false,
+      });
+    }
+
+    return response.json({
+      message: "User location updated successfully.",
+      error: false,
+      success: true,
+      data: {
+        userId: user._id,
+        location: user.currentLocation,
+      },
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || "Error updating user currentLocation.",
       error: true,
       success: false,
     });
