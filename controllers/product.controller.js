@@ -1,11 +1,11 @@
-import ProductModel from "../models/product.modal.js";
-import ProductRAMSModel from "../models/productRAMS.js";
-import ProductWEIGHTModel from "../models/productWEIGHT.js";
-import ProductSIZEModel from "../models/productSIZE.js";
+import ProductModel from '../models/product.modal.js';
+import ProductRAMSModel from '../models/productRAMS.js';
+import ProductWEIGHTModel from '../models/productWEIGHT.js';
+import ProductSIZEModel from '../models/productSIZE.js';
 
-import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
-import { request } from "http";
+import { v2 as cloudinary } from 'cloudinary';
+import fs from 'fs';
+import { request } from 'http';
 
 cloudinary.config({
   cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -129,14 +129,14 @@ export async function createProduct(request, response) {
       response.status(500).json({
         error: true,
         success: false,
-        message: "Product Not created",
+        message: 'Product Not created',
       });
     }
 
     imagesArr = [];
 
     return response.status(200).json({
-      message: "Product Created successfully",
+      message: 'Product Created successfully',
       error: false,
       success: true,
       product: product,
@@ -196,23 +196,23 @@ export const verifyProduct = async (req, res) => {
     const product = await ProductModel.findByIdAndUpdate(
       id,
       { isVerified: true },
-      { new: true, select: "-password" } // Exclude password
+      { new: true, select: '-password' } // Exclude password
     );
 
     if (!product) {
-      return res.status(404).json({ error: true, message: "Vendor not found" });
+      return res.status(404).json({ error: true, message: 'Vendor not found' });
     }
 
     res.status(200).json({
       error: false,
-      message: "Product verified successfully",
+      message: 'Product verified successfully',
       data: product,
     });
   } catch (error) {
-    console.error("Verify product error:", error);
+    console.error('Verify product error:', error);
     res
       .status(500)
-      .json({ error: true, message: "Server error: " + error.message });
+      .json({ error: true, message: 'Server error: ' + error.message });
   }
 };
 
@@ -265,7 +265,7 @@ export async function getAllProductsForVendorId(request, response) {
       return response.status(400).json({
         error: true,
         success: false,
-        message: "vendorId is required",
+        message: 'vendorId is required',
       });
     }
 
@@ -291,7 +291,7 @@ export async function getAllProductsForVendorId(request, response) {
       return response.status(404).json({
         error: true,
         success: false,
-        message: "No products found for this vendorId",
+        message: 'No products found for this vendorId',
       });
     }
 
@@ -307,7 +307,7 @@ export async function getAllProductsForVendorId(request, response) {
     });
   } catch (error) {
     return response.status(500).json({
-      message: error.message || "An error occurred",
+      message: error.message || 'An error occurred',
       error: true,
       success: false,
     });
@@ -325,7 +325,7 @@ export async function getAllProductsByCatId(request, response) {
 
     if (page > totalPages) {
       return response.status(404).json({
-        message: "Page not found",
+        message: 'Page not found',
         success: false,
         error: true,
       });
@@ -334,7 +334,7 @@ export async function getAllProductsByCatId(request, response) {
     const products = await ProductModel.find({
       catId: request.params.id,
     })
-      .populate("category")
+      .populate('category')
       .skip((page - 1) * perPage)
       .limit(perPage)
       .exec();
@@ -373,7 +373,7 @@ export async function getAllProductsByCatName(request, response) {
 
     if (page > totalPages) {
       return response.status(404).json({
-        message: "Page not found",
+        message: 'Page not found',
         success: false,
         error: true,
       });
@@ -382,7 +382,7 @@ export async function getAllProductsByCatName(request, response) {
     const products = await ProductModel.find({
       catName: request.query.catName,
     })
-      .populate("category")
+      .populate('category')
       .skip((page - 1) * perPage)
       .limit(perPage)
       .exec();
@@ -421,7 +421,7 @@ export async function getAllProductsBySubCatId(request, response) {
 
     if (page > totalPages) {
       return response.status(404).json({
-        message: "Page not found",
+        message: 'Page not found',
         success: false,
         error: true,
       });
@@ -430,7 +430,7 @@ export async function getAllProductsBySubCatId(request, response) {
     const products = await ProductModel.find({
       subCatId: request.params.id,
     })
-      .populate("category")
+      .populate('category')
       .skip((page - 1) * perPage)
       .limit(perPage)
       .exec();
@@ -469,7 +469,7 @@ export async function getAllProductsBySubCatName(request, response) {
 
     if (page > totalPages) {
       return response.status(404).json({
-        message: "Page not found",
+        message: 'Page not found',
         success: false,
         error: true,
       });
@@ -478,7 +478,7 @@ export async function getAllProductsBySubCatName(request, response) {
     const products = await ProductModel.find({
       subCat: request.query.subCat,
     })
-      .populate("category")
+      .populate('category')
       .skip((page - 1) * perPage)
       .limit(perPage)
       .exec();
@@ -517,7 +517,7 @@ export async function getAllProductsByThirdLavelCatId(request, response) {
 
     if (page > totalPages) {
       return response.status(404).json({
-        message: "Page not found",
+        message: 'Page not found',
         success: false,
         error: true,
       });
@@ -526,7 +526,7 @@ export async function getAllProductsByThirdLavelCatId(request, response) {
     const products = await ProductModel.find({
       thirdsubCatId: request.params.id,
     })
-      .populate("category")
+      .populate('category')
       .skip((page - 1) * perPage)
       .limit(perPage)
       .exec();
@@ -565,7 +565,7 @@ export async function getAllProductsByThirdLavelCatName(request, response) {
 
     if (page > totalPages) {
       return response.status(404).json({
-        message: "Page not found",
+        message: 'Page not found',
         success: false,
         error: true,
       });
@@ -574,7 +574,7 @@ export async function getAllProductsByThirdLavelCatName(request, response) {
     const products = await ProductModel.find({
       thirdsubCat: request.query.thirdsubCat,
     })
-      .populate("category")
+      .populate('category')
       .skip((page - 1) * perPage)
       .limit(perPage)
       .exec();
@@ -607,29 +607,29 @@ export async function getAllProductsByThirdLavelCatName(request, response) {
 export async function getAllProductsByPrice(request, response) {
   let productList = [];
 
-  if (request.query.catId !== "" && request.query.catId !== undefined) {
+  if (request.query.catId !== '' && request.query.catId !== undefined) {
     const productListArr = await ProductModel.find({
       catId: request.query.catId,
-    }).populate("category");
+    }).populate('category');
 
     productList = productListArr;
   }
 
-  if (request.query.subCatId !== "" && request.query.subCatId !== undefined) {
+  if (request.query.subCatId !== '' && request.query.subCatId !== undefined) {
     const productListArr = await ProductModel.find({
       subCatId: request.query.subCatId,
-    }).populate("category");
+    }).populate('category');
 
     productList = productListArr;
   }
 
   if (
-    request.query.thirdsubCatId !== "" &&
+    request.query.thirdsubCatId !== '' &&
     request.query.thirdsubCatId !== undefined
   ) {
     const productListArr = await ProductModel.find({
       thirdsubCatId: request.query.thirdsubCatId,
-    }).populate("category");
+    }).populate('category');
 
     productList = productListArr;
   }
@@ -670,7 +670,7 @@ export async function getAllProductsByRating(request, response) {
 
     if (page > totalPages) {
       return response.status(404).json({
-        message: "Page not found",
+        message: 'Page not found',
         success: false,
         error: true,
       });
@@ -685,7 +685,7 @@ export async function getAllProductsByRating(request, response) {
         rating: request.query.rating,
         catId: request.query.catId,
       })
-        .populate("category")
+        .populate('category')
         .skip((page - 1) * perPage)
         .limit(perPage)
         .exec();
@@ -696,7 +696,7 @@ export async function getAllProductsByRating(request, response) {
         rating: request.query.rating,
         subCatId: request.query.subCatId,
       })
-        .populate("category")
+        .populate('category')
         .skip((page - 1) * perPage)
         .limit(perPage)
         .exec();
@@ -707,7 +707,7 @@ export async function getAllProductsByRating(request, response) {
         rating: request.query.rating,
         thirdsubCatId: request.query.thirdsubCatId,
       })
-        .populate("category")
+        .populate('category')
         .skip((page - 1) * perPage)
         .limit(perPage)
         .exec();
@@ -768,7 +768,7 @@ export async function getAllFeaturedProducts(request, response) {
   try {
     const products = await ProductModel.find({
       isFeatured: true,
-    }).populate("category");
+    }).populate('category');
 
     if (!products) {
       response.status(500).json({
@@ -796,7 +796,7 @@ export async function getAllProductsBanners(request, response) {
   try {
     const products = await ProductModel.find({
       isDisplayOnHomeBanner: true,
-    }).populate("category");
+    }).populate('category');
 
     if (!products) {
       response.status(500).json({
@@ -822,12 +822,12 @@ export async function getAllProductsBanners(request, response) {
 //delete product
 export async function deleteProduct(request, response) {
   const product = await ProductModel.findById(request.params.id).populate(
-    "category"
+    'category'
   );
 
   if (!product) {
     return response.status(404).json({
-      message: "Product Not found",
+      message: 'Product Not found',
       error: true,
       success: false,
     });
@@ -835,13 +835,13 @@ export async function deleteProduct(request, response) {
 
   const images = product.images;
 
-  let img = "";
+  let img = '';
   for (img of images) {
     const imgUrl = img;
-    const urlArr = imgUrl.split("/");
+    const urlArr = imgUrl.split('/');
     const image = urlArr[urlArr.length - 1];
 
-    const imageName = image.split(".")[0];
+    const imageName = image.split('.')[0];
 
     if (imageName) {
       cloudinary.uploader.destroy(imageName, (error, result) => {
@@ -856,7 +856,7 @@ export async function deleteProduct(request, response) {
 
   if (!deletedProduct) {
     response.status(404).json({
-      message: "Product not deleted!",
+      message: 'Product not deleted!',
       success: false,
       error: true,
     });
@@ -865,7 +865,7 @@ export async function deleteProduct(request, response) {
   return response.status(200).json({
     success: true,
     error: false,
-    message: "Product Deleted!",
+    message: 'Product Deleted!',
   });
 }
 
@@ -876,7 +876,7 @@ export async function deleteMultipleProduct(request, response) {
   if (!ids || !Array.isArray(ids)) {
     return response
       .status(400)
-      .json({ error: true, success: false, message: "Invalid input" });
+      .json({ error: true, success: false, message: 'Invalid input' });
   }
 
   for (let i = 0; i < ids?.length; i++) {
@@ -884,13 +884,13 @@ export async function deleteMultipleProduct(request, response) {
 
     const images = product.images;
 
-    let img = "";
+    let img = '';
     for (img of images) {
       const imgUrl = img;
-      const urlArr = imgUrl.split("/");
+      const urlArr = imgUrl.split('/');
       const image = urlArr[urlArr.length - 1];
 
-      const imageName = image.split(".")[0];
+      const imageName = image.split('.')[0];
 
       if (imageName) {
         cloudinary.uploader.destroy(imageName, (error, result) => {
@@ -903,7 +903,7 @@ export async function deleteMultipleProduct(request, response) {
   try {
     await ProductModel.deleteMany({ _id: { $in: ids } });
     return response.status(200).json({
-      message: "Product delete successfully",
+      message: 'Product delete successfully',
       error: false,
       success: true,
     });
@@ -920,12 +920,12 @@ export async function deleteMultipleProduct(request, response) {
 export async function getProduct(request, response) {
   try {
     const product = await ProductModel.findById(request.params.id).populate(
-      "category"
+      'category'
     );
 
     if (!product) {
       return response.status(404).json({
-        message: "The product is not found",
+        message: 'The product is not found',
         error: true,
         success: false,
       });
@@ -949,10 +949,10 @@ export async function getProduct(request, response) {
 export async function removeImageFromCloudinary(request, response) {
   const imgUrl = request.query.img;
 
-  const urlArr = imgUrl.split("/");
+  const urlArr = imgUrl.split('/');
   const image = urlArr[urlArr.length - 1];
 
-  const imageName = image.split(".")[0];
+  const imageName = image.split('.')[0];
 
   if (imageName) {
     const res = await cloudinary.uploader.destroy(
@@ -1009,7 +1009,7 @@ export async function updateProduct(request, response) {
 
     if (!product) {
       return response.status(404).json({
-        message: "the product can not be updated!",
+        message: 'the product can not be updated!',
         status: false,
       });
     }
@@ -1017,7 +1017,7 @@ export async function updateProduct(request, response) {
     imagesArr = [];
 
     return response.status(200).json({
-      message: "The product is updated",
+      message: 'The product is updated',
       error: false,
       success: true,
     });
@@ -1042,12 +1042,12 @@ export async function createProductRAMS(request, response) {
       response.status(500).json({
         error: true,
         success: false,
-        message: "Product RAMS Not created",
+        message: 'Product RAMS Not created',
       });
     }
 
     return response.status(200).json({
-      message: "Product RAMS Created successfully",
+      message: 'Product RAMS Created successfully',
       error: false,
       success: true,
       product: productRAMS,
@@ -1066,7 +1066,7 @@ export async function deleteProductRAMS(request, response) {
 
   if (!productRams) {
     return response.status(404).json({
-      message: "Item Not found",
+      message: 'Item Not found',
       error: true,
       success: false,
     });
@@ -1078,7 +1078,7 @@ export async function deleteProductRAMS(request, response) {
 
   if (!deletedProductRams) {
     response.status(404).json({
-      message: "Item not deleted!",
+      message: 'Item not deleted!',
       success: false,
       error: true,
     });
@@ -1087,7 +1087,7 @@ export async function deleteProductRAMS(request, response) {
   return response.status(200).json({
     success: true,
     error: false,
-    message: "Product Ram Deleted!",
+    message: 'Product Ram Deleted!',
   });
 }
 
@@ -1103,13 +1103,13 @@ export async function updateProductRam(request, response) {
 
     if (!productRam) {
       return response.status(404).json({
-        message: "the product Ram can not be updated!",
+        message: 'the product Ram can not be updated!',
         status: false,
       });
     }
 
     return response.status(200).json({
-      message: "The product Ram is updated",
+      message: 'The product Ram is updated',
       error: false,
       success: true,
     });
@@ -1184,12 +1184,12 @@ export async function createProductWEIGHT(request, response) {
       response.status(500).json({
         error: true,
         success: false,
-        message: "Product WEIGHT Not created",
+        message: 'Product WEIGHT Not created',
       });
     }
 
     return response.status(200).json({
-      message: "Product WEIGHT Created successfully",
+      message: 'Product WEIGHT Created successfully',
       error: false,
       success: true,
       product: productWeight,
@@ -1208,7 +1208,7 @@ export async function deleteProductWEIGHT(request, response) {
 
   if (!productWeight) {
     return response.status(404).json({
-      message: "Item Not found",
+      message: 'Item Not found',
       error: true,
       success: false,
     });
@@ -1220,7 +1220,7 @@ export async function deleteProductWEIGHT(request, response) {
 
   if (!deletedProductWeight) {
     response.status(404).json({
-      message: "Item not deleted!",
+      message: 'Item not deleted!',
       success: false,
       error: true,
     });
@@ -1229,7 +1229,7 @@ export async function deleteProductWEIGHT(request, response) {
   return response.status(200).json({
     success: true,
     error: false,
-    message: "Product Weight Deleted!",
+    message: 'Product Weight Deleted!',
   });
 }
 
@@ -1245,13 +1245,13 @@ export async function updateProductWeight(request, response) {
 
     if (!productWeight) {
       return response.status(404).json({
-        message: "the product weight can not be updated!",
+        message: 'the product weight can not be updated!',
         status: false,
       });
     }
 
     return response.status(200).json({
-      message: "The product weight is updated",
+      message: 'The product weight is updated',
       error: false,
       success: true,
     });
@@ -1326,12 +1326,12 @@ export async function createProductSize(request, response) {
       response.status(500).json({
         error: true,
         success: false,
-        message: "Product size Not created",
+        message: 'Product size Not created',
       });
     }
 
     return response.status(200).json({
-      message: "Product size Created successfully",
+      message: 'Product size Created successfully',
       error: false,
       success: true,
       product: productSize,
@@ -1350,7 +1350,7 @@ export async function deleteProductSize(request, response) {
 
   if (!productSize) {
     return response.status(404).json({
-      message: "Item Not found",
+      message: 'Item Not found',
       error: true,
       success: false,
     });
@@ -1362,7 +1362,7 @@ export async function deleteProductSize(request, response) {
 
   if (!deletedProductSize) {
     response.status(404).json({
-      message: "Item not deleted!",
+      message: 'Item not deleted!',
       success: false,
       error: true,
     });
@@ -1371,7 +1371,7 @@ export async function deleteProductSize(request, response) {
   return response.status(200).json({
     success: true,
     error: false,
-    message: "Product size Deleted!",
+    message: 'Product size Deleted!',
   });
 }
 
@@ -1387,13 +1387,13 @@ export async function updateProductSize(request, response) {
 
     if (!productSize) {
       return response.status(404).json({
-        message: "the product size can not be updated!",
+        message: 'the product size can not be updated!',
         status: false,
       });
     }
 
     return response.status(200).json({
-      message: "The product size is updated",
+      message: 'The product size is updated',
       error: false,
       success: true,
     });
@@ -1492,7 +1492,7 @@ export async function filters(request, response) {
 
   try {
     const products = await ProductModel.find(filters)
-      .populate("category")
+      .populate('category')
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
@@ -1518,13 +1518,13 @@ export async function filters(request, response) {
 // Sort function
 const sortItems = (products, sortBy, order) => {
   return products.sort((a, b) => {
-    if (sortBy === "name") {
-      return order === "asc"
+    if (sortBy === 'name') {
+      return order === 'asc'
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name);
     }
-    if (sortBy === "price") {
-      return order === "asc" ? a.price - b.price : b.price - a.price;
+    if (sortBy === 'price') {
+      return order === 'asc' ? a.price - b.price : b.price - a.price;
     }
     return 0; // Default
   });
@@ -1544,9 +1544,9 @@ export async function sortBy(request, response) {
 
 export async function searchProductController(request, response) {
   try {
-    const { query } = request.query;
-    const page = parseInt(request.query.page) || 1; 
-    const limit = parseInt(request.query.limit) || 10; 
+    const { query, page: queryPage, limit: queryLimit } = request.body;
+    const page = parseInt(queryPage) || 1;
+    const limit = parseInt(queryLimit) || 10;
 
     if (!query) {
       return response.status(400).json({
@@ -1558,17 +1558,17 @@ export async function searchProductController(request, response) {
 
     const searchFilter = {
       $or: [
-        { name: { $regex: query, $options: "i" } },
-        { brand: { $regex: query, $options: "i" } },
-        { catName: { $regex: query, $options: "i" } },
-        { subCat: { $regex: query, $options: "i" } },
-        { thirdsubCat: { $regex: query, $options: "i" } },
+        { name: { $regex: query, $options: 'i' } },
+        { brand: { $regex: query, $options: 'i' } },
+        { catName: { $regex: query, $options: 'i' } },
+        { subCat: { $regex: query, $options: 'i' } },
+        { thirdsubCat: { $regex: query, $options: 'i' } },
       ],
-      isVerified: true 
+      isVerified: true,
     };
 
     const products = await ProductModel.find(searchFilter)
-      .populate("category")
+      .populate('category')
       .skip((page - 1) * limit)
       .limit(limit);
 
@@ -1580,9 +1580,9 @@ export async function searchProductController(request, response) {
       error: false,
       success: true,
       products: products,
-      total: total, 
-      page: page,  
-      totalPages: totalPages, 
+      total: total,
+      page: page,
+      totalPages: totalPages,
     });
   } catch (error) {
     return response.status(500).json({
