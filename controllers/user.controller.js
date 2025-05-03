@@ -20,10 +20,7 @@ cloudinary.config({
 export async function registerUserController(request, response) {
   try {
     let user;
-
-    // Include email in destructuring
     const { name, email, phone, password } = request.body;
-    // Add email to validation check
     if (!name || !email || !phone || !password) {
       return response.status(400).json({
         message: "provide name, email, phone, password",
@@ -267,48 +264,77 @@ export async function authWithGoogle(request, response) {
 
 export async function loginUserController(request, response) {
   try {
-    const { phone, password } = request.body;
+    const { email, phone, password } = request.body;
 
-    const user = await UserModel.findOne({ phone: phone });
-
-    if (!user) {
+    // Check if either email or phone is provided
+    if (!email && !phone) {
       return response.status(400).json({
-        message: "User not register",
+        message: "Please provide email or phone number for login.",
         error: true,
         success: false,
       });
     }
+
+    console.log("Login attempt with:", { email, phone, password });
+
+    let user = null;
+
+    // Find user based on whether email or phone is provided
+    if (email) {
+      user = await UserModel.findOne({ email: email });
+      console.log("Attempting to find user by email:", email);
+    } else if (phone) {
+      user = await UserModel.findOne({ phone: phone });
+      console.log("Attempting to find user by phone:", phone);
+    }
+
+    if (!user) {
+      console.log("User not found for login:", { email, phone });
+      return response.status(400).json({
+        message: "User not registered with this email or phone number.",
+        error: true,
+        success: false,
+      });
+    }
+
+    console.log("User found:", { userId: user._id, userEmail: user.email, userPhone: user.phone, storedPasswordHash: user.password });
 
     if (user.status !== "Active") {
       return response.status(400).json({
-        message: "Contact to admin",
+        message: "Your account is not active. Please contact admin.",
         error: true,
         success: false,
       });
     }
 
-    if (user.phone == null) {
-      return response.status(400).json({
-        message: "Your Phone is not verify yet please verify your Phone first",
+    // Check if the user registered with Google
+    if (user.signUpWithGoogle) {
+       return response.status(400).json({
+        message: "This account was registered with Google. Please login with Google.",
         error: true,
         success: false,
       });
     }
 
+    // Check password
     const checkPassword = await bcryptjs.compare(password, user.password);
+    console.log("Password comparison result:", checkPassword);
 
     if (!checkPassword) {
+      console.log("Password comparison failed.");
       return response.status(400).json({
-        message: "Check your password",
+        message: "Incorrect password.",
         error: true,
         success: false,
       });
     }
+
+    console.log("Password comparison successful.");
 
     const accesstoken = await generatedAccessToken(user._id);
     const refreshToken = await genertedRefreshToken(user._id);
 
-    const updateUser = await UserModel.findByIdAndUpdate(user?._id, {
+    await UserModel.findByIdAndUpdate(user?._id, {
       last_login_date: new Date(),
     });
 
@@ -321,7 +347,7 @@ export async function loginUserController(request, response) {
     response.cookie("refreshToken", refreshToken, cookiesOption);
 
     return response.json({
-      message: "Login successfully",
+      message: "Login successful",
       error: false,
       success: true,
       data: {

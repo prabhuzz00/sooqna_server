@@ -78,20 +78,19 @@ const userSchema = mongoose.Schema(
     },
     currentLocation: {
       type: {
-        type: String, // Don't do `{ location: { type: String } }`
-        enum: ['Point'], // 'location.type' must be 'Point'
+        type: String, 
+        enum: ['Point'], 
         default: 'Point'
       },
       coordinates: {
-        type: [Number], // Array of numbers for longitude and latitude
-        default: [0, 0] // Default coordinates [longitude, latitude]
+        type: [Number], 
+        default: [0, 0] 
       }
     },
   },
   { timestamps: true }
 );
 
-// Add 2dsphere index for efficient geospatial queries
 userSchema.index({ currentLocation: '2dsphere' });
 
 const UserModel = mongoose.model("User", userSchema);
