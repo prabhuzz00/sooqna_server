@@ -275,8 +275,6 @@ export async function loginUserController(request, response) {
       });
     }
 
-    console.log("Login attempt with:", { email, phone, password });
-
     let user = null;
 
     // Find user based on whether email or phone is provided
@@ -297,8 +295,6 @@ export async function loginUserController(request, response) {
       });
     }
 
-    console.log("User found:", { userId: user._id, userEmail: user.email, userPhone: user.phone, storedPasswordHash: user.password });
-
     if (user.status !== "Active") {
       return response.status(400).json({
         message: "Your account is not active. Please contact admin.",
@@ -318,7 +314,6 @@ export async function loginUserController(request, response) {
 
     // Check password
     const checkPassword = await bcryptjs.compare(password, user.password);
-    console.log("Password comparison result:", checkPassword);
 
     if (!checkPassword) {
       console.log("Password comparison failed.");
@@ -328,8 +323,6 @@ export async function loginUserController(request, response) {
         success: false,
       });
     }
-
-    console.log("Password comparison successful.");
 
     const accesstoken = await generatedAccessToken(user._id);
     const refreshToken = await genertedRefreshToken(user._id);
