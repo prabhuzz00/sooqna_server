@@ -5,21 +5,24 @@ import UserModel from "../models/user.model.js";
 import paypal from "@paypal/checkout-server-sdk";
 import OrderConfirmationEmail from "../utils/orderEmailTemplate.js";
 import sendEmailFun from "../config/sendEmail.js";
+import QRCode from "qrcode";
 
 export const createOrderController = async (request, response) => {
   try {
+    let qrCodeImg = await QRCode.toDataURL(request.body.barcode);
     let order = new OrderModel({
-      userId: request.body.userId,
-      products: request.body.products,
-      paymentId: request.body.paymentId,
-      payment_status: request.body.payment_status,
-      delivery_address: request.body.delivery_address,
-      totalAmt: request.body.totalAmt,
-      barcode: request.body.barcode,
-      date: request.body.date,
-    });
-
-    if (!order) {
+          userId: request.body.userId,
+          products: request.body.products,
+          paymentId: request.body.paymentId,
+          payment_status: request.body.payment_status,
+          delivery_address: request.body.delivery_address,
+          totalAmt: request.body.totalAmt,
+          barcode: request.body.barcode,
+          qrCode: qrCodeImg,
+          date: request.body.date,
+        });
+    
+        if (!order) {
       response.status(500).json({
         error: true,
         success: false,

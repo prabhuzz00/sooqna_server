@@ -60,6 +60,9 @@ const orderSchema = new mongoose.Schema(
     barcode: {
       type: String,
     },
+    qrCode: {
+      type: String,
+    },
   },
   {
     timestamps: true,
