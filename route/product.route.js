@@ -41,6 +41,7 @@ import {
   searchProductController,
   getAllProductsForVendorId,
   verifyProduct,
+  searchByImage,
 } from "../controllers/product.controller.js";
 
 import { removeImageFromCloudinary } from "../controllers/category.controller.js";
@@ -120,5 +121,6 @@ productRouter.get("/productSize/:id", getProductSizeById);
 productRouter.post("/filters", filters);
 productRouter.post("/sortBy", sortBy);
 productRouter.post("/search/get", searchProductController);
+productRouter.post("/search/image", searchByImage);
 productRouter.patch("/verify/:id", verifyProduct);
 export default productRouter;

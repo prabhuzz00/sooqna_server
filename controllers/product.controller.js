@@ -2,6 +2,7 @@ import ProductModel from '../models/product.modal.js';
 import ProductRAMSModel from '../models/productRAMS.js';
 import ProductWEIGHTModel from '../models/productWEIGHT.js';
 import ProductSIZEModel from '../models/productSIZE.js';
+import { uploadAndTag } from '../utils/cloudService.js';
 
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
@@ -1591,5 +1592,43 @@ export async function searchProductController(request, response) {
       error: true,
       success: false,
     });
+  }
+}
+
+
+
+export async function searchByImage(req, res) {
+  if (!req.file) {
+    return res.status(400).json({ message: 'Image file required' });
+  }
+
+  try {
+    // 1️⃣ upload + get AI tags
+    const { tags: aiTags = [] } = await uploadAndTag(req.file.buffer);
+
+    if (aiTags.length === 0) {
+      return res
+        .status(200)
+        .json({ queryTags: [], products: [], message: 'No tags detected' });
+    }
+
+    // 2️⃣ aggregate by tag intersection
+    const products = await ProductModel.aggregate([
+      {
+        $addFields: {
+          matchCount: {
+            $size: { $setIntersection: [ aiTags, '$tags' ] }
+          }
+        }
+      },
+      { $match: { matchCount: { $gt: 0 } } },
+      { $sort:  { matchCount: -1, createdAt: -1 } },
+      { $limit: 20 }
+    ]);
+
+    res.json({ queryTags: aiTags, products });
+  } catch (err) {
+    console.error('searchByImage error:', err);
+    res.status(500).json({ message: err.message });
   }
 }
