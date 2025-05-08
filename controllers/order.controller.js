@@ -11,18 +11,18 @@ export const createOrderController = async (request, response) => {
   try {
     let qrCodeImg = await QRCode.toDataURL(request.body.barcode);
     let order = new OrderModel({
-          userId: request.body.userId,
-          products: request.body.products,
-          paymentId: request.body.paymentId,
-          payment_status: request.body.payment_status,
-          delivery_address: request.body.delivery_address,
-          totalAmt: request.body.totalAmt,
-          barcode: request.body.barcode,
-          qrCode: qrCodeImg,
-          date: request.body.date,
-        });
-    
-        if (!order) {
+      userId: request.body.userId,
+      products: request.body.products,
+      paymentId: request.body.paymentId,
+      payment_status: request.body.payment_status,
+      delivery_address: request.body.delivery_address,
+      totalAmt: request.body.totalAmt,
+      barcode: request.body.barcode,
+      qrCode: qrCodeImg,
+      date: request.body.date,
+    });
+
+    if (!order) {
       response.status(500).json({
         error: true,
         success: false,
@@ -78,6 +78,7 @@ export const createOrderController = async (request, response) => {
   }
 };
 
+//get order detail
 export async function getOrderDetailsController(request, response) {
   try {
     const userId = request.userId; // order id
@@ -176,13 +177,61 @@ export async function getOrderReturnController(request, response) {
   }
 }
 
+//get vendor order details
+// export async function getVendorOrderDetailsController(request, response) {
+//   try {
+//     // const userId = request.userId; // Assuming this is the authenticated user's ID
+//     const vendorId = request.query.vendorId; // Vendor ID to filter orders
+//     const { page = 1, limit = 10 } = request.query; // Default values for pagination
+
+//     // Validate vendorId
+//     if (!vendorId) {
+//       return response.status(400).json({
+//         message: "Vendor ID is required",
+//         error: true,
+//         success: false,
+//       });
+//     }
+
+//     // Query to find orders where at least one product has the specified vendorId
+//     const orderlist = await OrderModel.find({
+//       "products.vendorId": vendorId,
+//     })
+//       .sort({ createdAt: -1 }) // Sort by newest first
+//       .populate("delivery_address userId") // Populate referenced fields
+//       .skip((parseInt(page) - 1) * parseInt(limit)) // Pagination: skip records
+//       .limit(parseInt(limit)); // Limit number of records
+
+//     // Count total orders matching the vendorId
+//     const total = await OrderModel.countDocuments({
+//       "products.vendorId": vendorId,
+//     });
+
+//     return response.json({
+//       message: "Order list retrieved successfully",
+//       data: orderlist,
+//       error: false,
+//       success: true,
+//       total,
+//       page: parseInt(page),
+//       totalPages: Math.ceil(total / parseInt(limit)),
+//     });
+//   } catch (error) {
+//     return response.status(500).json({
+//       message: error.message || "Internal server error",
+//       error: true,
+//       success: false,
+//     });
+//   }
+// }
+
+// Get vendor order details
 export async function getVendorOrderDetailsController(request, response) {
   try {
-    const userId = request.userId; // Assuming this is the authenticated user's ID
-    const vendorId = request.vendorId; // Vendor ID to filter orders
-    const { page = 1, limit = 10 } = request.query; // Default values for pagination
+    const vendorId = request.query.vendorId;
+    const page = parseInt(request.query.page) || 1;
+    const limit = parseInt(request.query.limit) || 10;
 
-    // Validate vendorId
     if (!vendorId) {
       return response.status(400).json({
         message: "Vendor ID is required",
@@ -191,28 +240,45 @@ export async function getVendorOrderDetailsController(request, response) {
       });
     }
 
-    // Query to find orders where at least one product has the specified vendorId
-    const orderlist = await OrderModel.find({
+    // Find orders that include at least one product from this vendor
+    const rawOrders = await OrderModel.find({
       "products.vendorId": vendorId,
     })
-      .sort({ createdAt: -1 }) // Sort by newest first
-      .populate("delivery_address userId") // Populate referenced fields
-      .skip((parseInt(page) - 1) * parseInt(limit)) // Pagination: skip records
-      .limit(parseInt(limit)); // Limit number of records
+      .sort({ createdAt: -1 })
+      .populate("delivery_address userId")
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-    // Count total orders matching the vendorId
+    // Filter products within each order and exclude orders with no matching products
+    const filteredOrders = rawOrders
+      .map((order) => {
+        const filteredProducts = order.products.filter(
+          (product) =>
+            product.vendorId && product.vendorId.toString() === vendorId
+        );
+
+        if (filteredProducts.length === 0) return null; // Skip orders with no matching products
+
+        return {
+          ...order.toObject(),
+          products: filteredProducts,
+        };
+      })
+      .filter((order) => order !== null); // Remove nulls (orders with no matching products)
+
+    // Count total matching orders (note: some might get filtered if no valid products remain)
     const total = await OrderModel.countDocuments({
       "products.vendorId": vendorId,
     });
 
     return response.json({
       message: "Order list retrieved successfully",
-      data: orderlist,
+      data: filteredOrders,
       error: false,
       success: true,
       total,
-      page: parseInt(page),
-      totalPages: Math.ceil(total / parseInt(limit)),
+      page,
+      totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
     return response.status(500).json({
@@ -695,6 +761,117 @@ export const totalSalesController = async (request, response) => {
     return response.status(200).json({
       totalSales: totalSales,
       monthlySales: monthlySales,
+      error: false,
+      success: true,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+};
+
+//get Total Order Count for Vendor
+export async function getTotalOrdersCountVendorController(request, response) {
+  try {
+    const vendorId = request.query.vendorId;
+
+    if (!vendorId) {
+      return response.status(400).json({
+        message: "Vendor ID is required",
+        error: true,
+        success: false,
+      });
+    }
+
+    const ordersCount = await OrderModel.countDocuments({
+      "products.vendorId": vendorId,
+    });
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      count: ordersCount,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+//get total sale of vendor
+
+export const totalSalesVendorController = async (request, response) => {
+  try {
+    const vendorId = request.query.vendorId;
+
+    if (!vendorId) {
+      return response.status(400).json({
+        message: "Vendor ID is required",
+        error: true,
+        success: false,
+      });
+    }
+
+    const currentYear = new Date().getFullYear();
+
+    // Fetch the vendor to get commission rate
+    const vendor = await VendorModel.findById(vendorId);
+    if (!vendor) {
+      return response.status(404).json({
+        message: "Vendor not found",
+        error: true,
+        success: false,
+      });
+    }
+
+    const commissionRate = vendor.commissionRate || 0; // e.g., 20 means 20%
+
+    const ordersList = await OrderModel.find({
+      "products.vendorId": vendorId,
+    });
+
+    let totalSales = 0;
+    const monthlySales = Array.from({ length: 12 }, (_, i) => ({
+      name: new Date(0, i)
+        .toLocaleString("default", { month: "short" })
+        .toUpperCase(),
+      TotalSales: 0,
+      TotalOrders: 0,
+    }));
+
+    for (const order of ordersList) {
+      const orderDate = new Date(order.createdAt);
+      const year = orderDate.getFullYear();
+      const month = orderDate.getMonth(); // 0-indexed
+
+      const vendorProducts = order.products.filter(
+        (p) => p.vendorId && p.vendorId.toString() === vendorId
+      );
+
+      const vendorTotal = vendorProducts.reduce(
+        (sum, p) => sum + (p.subTotal || 0),
+        0
+      );
+
+      const adjustedTotal = vendorTotal - (vendorTotal * commissionRate) / 100;
+
+      totalSales += adjustedTotal;
+
+      if (year === currentYear) {
+        monthlySales[month].TotalSales += adjustedTotal;
+        monthlySales[month].TotalOrders += 1;
+      }
+    }
+
+    return response.status(200).json({
+      totalSales,
+      monthlySales,
       error: false,
       success: true,
     });
