@@ -125,6 +125,10 @@ const productSchema = mongoose.Schema(
     barcode: {
       type: String,
     },
+    tags: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,

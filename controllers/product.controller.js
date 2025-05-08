@@ -119,6 +119,7 @@ export async function createProduct(request, response) {
       isVerified: request.body.isVerified,
       vendorId: request.body.vendorId,
       barcode: request.body.barcode,
+      tags : request.body.tags,
     });
 
     product = await product.save();
