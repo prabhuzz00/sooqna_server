@@ -278,6 +278,7 @@ export async function updatedCategory(request, response) {
     request.params.id,
     {
       name: request.body.name,
+      arName: request.body.arName,
       images: imagesArr.length > 0 ? imagesArr[0] : request.body.images,
       parentId: request.body.parentId,
       parentCatName: request.body.parentCatName,
