@@ -177,54 +177,6 @@ export async function getOrderReturnController(request, response) {
   }
 }
 
-//get vendor order details
-// export async function getVendorOrderDetailsController(request, response) {
-//   try {
-//     // const userId = request.userId; // Assuming this is the authenticated user's ID
-//     const vendorId = request.query.vendorId; // Vendor ID to filter orders
-//     const { page = 1, limit = 10 } = request.query; // Default values for pagination
-
-//     // Validate vendorId
-//     if (!vendorId) {
-//       return response.status(400).json({
-//         message: "Vendor ID is required",
-//         error: true,
-//         success: false,
-//       });
-//     }
-
-//     // Query to find orders where at least one product has the specified vendorId
-//     const orderlist = await OrderModel.find({
-//       "products.vendorId": vendorId,
-//     })
-//       .sort({ createdAt: -1 }) // Sort by newest first
-//       .populate("delivery_address userId") // Populate referenced fields
-//       .skip((parseInt(page) - 1) * parseInt(limit)) // Pagination: skip records
-//       .limit(parseInt(limit)); // Limit number of records
-
-//     // Count total orders matching the vendorId
-//     const total = await OrderModel.countDocuments({
-//       "products.vendorId": vendorId,
-//     });
-
-//     return response.json({
-//       message: "Order list retrieved successfully",
-//       data: orderlist,
-//       error: false,
-//       success: true,
-//       total,
-//       page: parseInt(page),
-//       totalPages: Math.ceil(total / parseInt(limit)),
-//     });
-//   } catch (error) {
-//     return response.status(500).json({
-//       message: error.message || "Internal server error",
-//       error: true,
-//       success: false,
-//     });
-//   }
-// }
-
 // Get vendor order details
 export async function getVendorOrderDetailsController(request, response) {
   try {
@@ -552,35 +504,6 @@ export const updateOrderStatusController = async (request, response) => {
     });
   }
 };
-
-// export const _updateOrderStatusController = async (request, response) => {
-//   try {
-//     const { id, order_status } = request.body;
-//     console.log('order status received : ', order_status)
-//     const updateOrder = await OrderModel.updateOne(
-//       {
-//         _id: id,
-//       },
-//       {
-//         order_status: order_status,
-//       },
-//       { new: true }
-//     );
-
-//     return response.json({
-//       message: "Update order status",
-//       success: true,
-//       error: false,
-//       data: updateOrder,
-//     });
-//   } catch (error) {
-//     return response.status(500).json({
-//       message: error.message || error,
-//       error: true,
-//       success: false,
-//     });
-//   }
-// };
 
 export const totalSalesController = async (request, response) => {
   try {
