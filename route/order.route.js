@@ -16,6 +16,7 @@ import {
   getOrderReturnController,
   getTotalOrdersCountVendorController,
   totalSalesVendorController,
+  downloadInvoiceController,
 } from "../controllers/order.controller.js";
 import vendorAuth from "../middlewares/vendorAuth.js";
 
@@ -46,5 +47,6 @@ orderRouter.get("/order-list/orders", auth, getUserOrderDetailsController);
 orderRouter.delete("/deleteOrder/:id", auth, deleteOrder);
 orderRouter.get("/incomplete-order-list", auth, getPendingOrderController);
 orderRouter.get("/return-order-list", auth, getOrderReturnController);
+orderRouter.get("/invoice/:orderId", auth, downloadInvoiceController);
 
 export default orderRouter;

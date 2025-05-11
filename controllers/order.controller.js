@@ -6,6 +6,11 @@ import paypal from "@paypal/checkout-server-sdk";
 import OrderConfirmationEmail from "../utils/orderEmailTemplate.js";
 import sendEmailFun from "../config/sendEmail.js";
 import QRCode from "qrcode";
+import PDFDocument from "pdfkit";
+import path from "path";
+import fs from "fs";
+import pdfTable from "pdfkit-table";
+import AddressModel from "../models/address.model.js";
 
 export const createOrderController = async (request, response) => {
   try {
@@ -1004,3 +1009,197 @@ export async function deleteOrder(request, response) {
     message: "Order Deleted!",
   });
 }
+
+export const downloadInvoiceController = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await OrderModel.findById(orderId)
+      .populate("userId")
+      .populate("delivery_address");
+
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    const doc = new PDFDocument({ margin: 50 });
+
+    // === Register Font ===
+    const fontPath = path.resolve("fonts/DejaVuSans.ttf");
+    if (!fs.existsSync(fontPath)) throw new Error("Font file not found");
+    doc.registerFont("Regular", fontPath);
+    doc.font("Regular");
+
+    // === Setup Response ===
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=invoice-${orderId}.pdf`
+    );
+    doc.pipe(res);
+
+    // === Logo and Invoice Title ===
+    const logoPath = path.resolve("public/sooqna.png");
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 50, 30, { width: 60 });
+    }
+    doc
+      .fontSize(20)
+      .fillColor("#28a745")
+      .text("Invoice", 450, 40, { align: "right" });
+    doc.moveDown(2);
+
+    // === Billed By Box ===
+    doc
+      .save()
+      .roundedRect(50, 90, 230, 100, 5)
+      .fillOpacity(0.1)
+      .fillAndStroke("#DFF5EC", "#DFF5EC")
+      .restore();
+
+    doc
+      .fillOpacity(1)
+      .fillColor("#000")
+      .font("Regular")
+      .fontSize(10)
+      .text("Billed by:", 60, 100)
+      .text(
+        "Foobar Labs\n46, Raghuveer Dham Society\nBengaluru, Karnataka, India – 560054\nGSTIN: 29ABCDE1234F2Z5\nPAN: ABECD1234F",
+        { width: 210 }
+      );
+
+    // === Billed To Box ===
+    doc
+      .save()
+      .roundedRect(300, 90, 230, 100, 5)
+      .fillOpacity(0.1)
+      .fillAndStroke("#DFF5EC", "#DFF5EC")
+      .restore();
+
+    const addr = order.delivery_address;
+    doc
+      .fillOpacity(1)
+      .fillColor("#000")
+      .font("Regular")
+      .fontSize(10)
+      .text("Billed to:", 310, 100)
+      .text(
+        `${order.userId?.name}\n${addr?.address_line1}, ${addr?.city}\n${addr?.state}, ${addr?.country}\nIndia - ${addr?.pincode}\nPhone: ${addr?.mobile}`,
+        { width: 210 }
+      );
+
+    // === Metadata ===
+    doc.moveTo(50, 200).moveDown().fontSize(10);
+    doc.text(`Place of Supply: Karnataka`);
+    doc.text(`Country of Supply: India`);
+    doc.moveDown();
+
+    // === Product Table Header ===
+    let y = doc.y + 10;
+    doc
+      .font("Regular")
+      .fontSize(10)
+      .fillColor("#000")
+      .text("Item", 50, y)
+      // .text("HSN", 170, y)
+      .text("Qty", 220, y)
+      .text("GST", 260, y)
+      .text("Taxable", 310, y)
+      .text("SGST", 380, y)
+      .text("CGST", 440, y)
+      .text("Amount", 500, y);
+
+    doc
+      .moveTo(50, y + 15)
+      .lineTo(560, y + 15)
+      .stroke();
+    y += 25;
+
+    // === Product Rows ===
+    order.products.forEach((p) => {
+      const gstPercent = 9;
+      const taxable = p.subTotal || p.price * p.quantity;
+      const gstSplit = (taxable * gstPercent) / 100;
+      const total = taxable + 2 * gstSplit;
+
+      doc
+        .fillColor("#000")
+        .text(p.productTitle || "N/A", 50, y)
+        // .text("06", 170, y)
+        .text(p.quantity.toString(), 220, y)
+        .text(`${gstPercent}%`, 260, y)
+        .text(`₹${taxable.toFixed(2)}`, 310, y)
+        .text(`₹${gstSplit.toFixed(2)}`, 380, y)
+        .text(`₹${gstSplit.toFixed(2)}`, 440, y)
+        .text(`₹${total.toFixed(2)}`, 500, y);
+      y += 20;
+    });
+
+    // === Totals ===
+    y += 20;
+    const gstTotal = order.totalAmt * 0.09;
+    doc
+      .font("Regular")
+      .fontSize(10)
+      .fillColor("#000")
+      .text(
+        `Sub Total: ₹${(order.totalAmt - 2 * gstTotal).toFixed(2)}`,
+        450,
+        y
+      );
+    y += 15;
+    doc.text(`CGST: ₹${gstTotal.toFixed(2)}`, 450, y);
+    y += 15;
+    doc.text(`SGST: ₹${gstTotal.toFixed(2)}`, 450, y);
+    y += 15;
+    doc.fontSize(11).text(`Total: ₹${order.totalAmt.toFixed(2)}`, 450, y);
+
+    // === Bank & Payment Details ===
+    y += 40;
+    doc
+      .font("Regular")
+      .fontSize(10)
+      .fillColor("#000")
+      .text("Bank & Payment Details", 50, y);
+    doc.text(
+      `Account Name: Foobar Labs\nAccount Number: 45506287967\nIFSC: SBIN001519\nBank: State Bank of India\nUPI: foobarlabs@okSBI`,
+      { width: 250 }
+    );
+
+    // === QR Code (Optional) ===
+    if (
+      order.qrCode &&
+      typeof order.qrCode === "string" &&
+      order.qrCode.startsWith("data:image")
+    ) {
+      const base64 = order.qrCode.replace(/^data:image\/png;base64,/, "");
+      const qrBuffer = Buffer.from(base64, "base64");
+      doc.image(qrBuffer, 450, doc.y - 80, { width: 80 });
+    }
+
+    // === Terms and Notes ===
+    y = doc.y + 20;
+    doc.fontSize(9).text("Terms and Conditions", 50, y);
+    doc.text(
+      "1. Please pay within 15 days from the date of invoice. Overdue invoices are subject to a 14% late fee."
+    );
+    doc.text("2. Please quote invoice number when remitting funds.");
+
+    doc.moveDown();
+    doc.text("Additional Notes", 50, doc.y);
+    doc.text(
+      "It is a long established fact that a reader will be distracted by the readable content..."
+    );
+
+    // === Footer ===
+    doc
+      .fontSize(10)
+      .fillColor("gray")
+      .text("Thank you for your business!", 0, doc.y + 30, {
+        align: "center",
+      });
+
+    doc.end();
+  } catch (err) {
+    console.error("Invoice generation error:", err);
+    res.status(500).json({ message: "Error generating invoice" });
+  }
+};
