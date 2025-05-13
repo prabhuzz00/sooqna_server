@@ -57,12 +57,12 @@ const userSchema = mongoose.Schema(
         ref: "order",
       },
     ],
-    // otp: {
-    //   type: String,
-    // },
-    // otpExpires: {
-    //   type: Date,
-    // },
+    otp: {
+      type: String,
+    },
+    otpExpires: {
+      type: Date,
+    },
     role: {
       type: String,
       enum: ["ADMIN", "USER"],
@@ -78,20 +78,20 @@ const userSchema = mongoose.Schema(
     },
     currentLocation: {
       type: {
-        type: String, 
-        enum: ['Point'], 
-        default: 'Point'
+        type: String,
+        enum: ["Point"],
+        default: "Point",
       },
       coordinates: {
-        type: [Number], 
-        default: [0, 0] 
-      }
+        type: [Number],
+        default: [0, 0],
+      },
     },
   },
   { timestamps: true }
 );
 
-userSchema.index({ currentLocation: '2dsphere' });
+userSchema.index({ currentLocation: "2dsphere" });
 
 const UserModel = mongoose.model("User", userSchema);
 

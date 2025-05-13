@@ -30,13 +30,16 @@ export async function registerUserController(request, response) {
     }
 
     // Check if user exists by email OR phone
-    user = await UserModel.findOne({ $or: [{ email: email }, { phone: phone }] });
+    user = await UserModel.findOne({
+      $or: [{ email: email }, { phone: phone }],
+    });
 
     if (user) {
       // Adjust message based on which field is duplicated
-      const message = user.email === email
-        ? "User already Registered with this Email"
-        : "User already Registered with this Phone Number";
+      const message =
+        user.email === email
+          ? "User already Registered with this Email"
+          : "User already Registered with this Phone Number";
       return response.json({
         message: message,
         error: true,
@@ -51,7 +54,7 @@ export async function registerUserController(request, response) {
 
     user = new UserModel({
       name: name,
-      email: email, 
+      email: email,
       phone: phone,
       password: hashPassword,
       // otp: verifyCode,
@@ -305,8 +308,9 @@ export async function loginUserController(request, response) {
 
     // Check if the user registered with Google
     if (user.signUpWithGoogle) {
-       return response.status(400).json({
-        message: "This account was registered with Google. Please login with Google.",
+      return response.status(400).json({
+        message:
+          "This account was registered with Google. Please login with Google.",
         error: true,
         success: false,
       });
@@ -544,7 +548,7 @@ export async function forgotPasswordController(request, response) {
 
       await sendEmailFun({
         sendTo: email,
-        subject: "Verify OTP from Ecommerce App",
+        subject: "Verify OTP from Soouqna App",
         text: "",
         html: VerificationEmail(user.name, verifyCode),
       });
