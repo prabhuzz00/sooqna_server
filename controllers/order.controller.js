@@ -1,5 +1,5 @@
 import OrderModel from "../models/order.model.js";
-import VendorModel from "../models/vendor.model.js";
+import Vendor from "../models/vendor.model.js";
 import ProductModel from "../models/product.modal.js";
 import UserModel from "../models/user.model.js";
 import paypal from "@paypal/checkout-server-sdk";
@@ -414,10 +414,106 @@ export const captureOrderPaypalController = async (request, response) => {
   }
 };
 
+// export const updateOrderStatusController = async (request, response) => {
+//   try {
+//     const { id, order_status } = request.body;
+//     console.log("order status received:", order_status);
+
+//     const order = await OrderModel.findById(id);
+//     if (!order) {
+//       return response.status(404).json({
+//         message: "Order not found",
+//         success: false,
+//         error: true,
+//       });
+//     }
+
+//     const vendorMap = new Map(); // vendorId -> totalPrice
+
+//     order.products.forEach((product) => {
+//       const { vendorId, price } = product;
+//       if (!vendorId || !price) return;
+
+//       if (!vendorMap.has(vendorId)) {
+//         vendorMap.set(vendorId, 0);
+//       }
+
+//       vendorMap.set(vendorId, vendorMap.get(vendorId) + price);
+//     });
+
+//     for (const [vendorId, totalPrice] of vendorMap.entries()) {
+//       const vendor = await VendorModel.findById(vendorId);
+//       if (!vendor) {
+//         console.warn(`Vendor with ID ${vendorId} not found`);
+//         continue;
+//       }
+
+//       const commissionRate = vendor.commissionRate || 0;
+//       // console.log('commissionRate : ', commissionRate)
+//       const netAmount = totalPrice - (commissionRate / 100) * totalPrice;
+
+//       if (order_status === "confirm") {
+//         const newDueBalance = (vendor.dueBalance || 0) + netAmount;
+
+//         await VendorModel.findByIdAndUpdate(vendorId, {
+//           dueBalance: newDueBalance,
+//         });
+
+//         console.log(
+//           `Vendor ${vendorId} CONFIRMED: Added ${netAmount} to dueBalance`
+//         );
+//       }
+
+//       if (order_status === "delivered") {
+//         const newDueBalance = Math.max((vendor.dueBalance || 0) - netAmount, 0);
+//         const newAvailableBalance = (vendor.availableBalance || 0) + netAmount;
+
+//         await VendorModel.findByIdAndUpdate(vendorId, {
+//           dueBalance: newDueBalance,
+//           availableBalance: newAvailableBalance,
+//         });
+
+//         console.log(
+//           `Vendor ${vendorId} DELIVERED: Moved ${netAmount} from due to available balance`
+//         );
+//       }
+//     }
+
+//     // Now update the Order in one shot: (order_status + push statusHistory)
+//     const updateOrder = await OrderModel.findByIdAndUpdate(
+//       id,
+//       {
+//         order_status,
+//         $push: {
+//           statusHistory: {
+//             status: order_status,
+//             updatedAt: new Date(),
+//           },
+//         },
+//       },
+//       { new: true }
+//     );
+
+//     return response.json({
+//       message: "Order status updated successfully",
+//       success: true,
+//       error: false,
+//       data: updateOrder,
+//     });
+//   } catch (error) {
+//     console.error("Error updating order status:", error);
+//     return response.status(500).json({
+//       message: error.message || error,
+//       error: true,
+//       success: false,
+//     });
+//   }
+// };
+
 export const updateOrderStatusController = async (request, response) => {
   try {
     const { id, order_status } = request.body;
-    console.log("order status received:", order_status);
+    console.log("Order status received:", order_status);
 
     const order = await OrderModel.findById(id);
     if (!order) {
@@ -428,39 +524,42 @@ export const updateOrderStatusController = async (request, response) => {
       });
     }
 
-    const vendorMap = new Map(); // vendorId -> totalPrice
+    const vendorMap = new Map(); // vendorId -> totalPrice (including quantity)
 
     order.products.forEach((product) => {
-      const { vendorId, price } = product;
+      const { vendorId, price, quantity = 1 } = product;
       if (!vendorId || !price) return;
+
+      const total = price * quantity;
 
       if (!vendorMap.has(vendorId)) {
         vendorMap.set(vendorId, 0);
       }
 
-      vendorMap.set(vendorId, vendorMap.get(vendorId) + price);
+      vendorMap.set(vendorId, vendorMap.get(vendorId) + total);
     });
 
     for (const [vendorId, totalPrice] of vendorMap.entries()) {
-      const vendor = await VendorModel.findById(vendorId);
+      const vendor = await Vendor.findById(vendorId);
       if (!vendor) {
         console.warn(`Vendor with ID ${vendorId} not found`);
         continue;
       }
 
       const commissionRate = vendor.commissionRate || 0;
-      // console.log('commissionRate : ', commissionRate)
       const netAmount = totalPrice - (commissionRate / 100) * totalPrice;
 
       if (order_status === "confirm") {
         const newDueBalance = (vendor.dueBalance || 0) + netAmount;
 
-        await VendorModel.findByIdAndUpdate(vendorId, {
+        await Vendor.findByIdAndUpdate(vendorId, {
           dueBalance: newDueBalance,
         });
 
         console.log(
-          `Vendor ${vendorId} CONFIRMED: Added ${netAmount} to dueBalance`
+          `Vendor ${vendorId} CONFIRMED: Added ${netAmount.toFixed(
+            2
+          )} to dueBalance`
         );
       }
 
@@ -468,18 +567,20 @@ export const updateOrderStatusController = async (request, response) => {
         const newDueBalance = Math.max((vendor.dueBalance || 0) - netAmount, 0);
         const newAvailableBalance = (vendor.availableBalance || 0) + netAmount;
 
-        await VendorModel.findByIdAndUpdate(vendorId, {
+        await Vendor.findByIdAndUpdate(vendorId, {
           dueBalance: newDueBalance,
           availableBalance: newAvailableBalance,
         });
 
         console.log(
-          `Vendor ${vendorId} DELIVERED: Moved ${netAmount} from due to available balance`
+          `Vendor ${vendorId} DELIVERED: Moved ${netAmount.toFixed(
+            2
+          )} from due to available balance`
         );
       }
     }
 
-    // Now update the Order in one shot: (order_status + push statusHistory)
+    // Update the order status and status history
     const updateOrder = await OrderModel.findByIdAndUpdate(
       id,
       {
@@ -749,7 +850,7 @@ export const totalSalesVendorController = async (request, response) => {
     const currentYear = new Date().getFullYear();
 
     // Fetch the vendor to get commission rate
-    const vendor = await VendorModel.findById(vendorId);
+    const vendor = await Vendor.findById(vendorId);
     if (!vendor) {
       return response.status(404).json({
         message: "Vendor not found",
