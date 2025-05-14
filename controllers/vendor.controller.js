@@ -277,7 +277,7 @@ const editVendor = async (req, res) => {
       phoneNumber,
       storeLogo: imagesArr,
       storeBanner: bannerImage,
-      commissionRate : Number(commissionRate),
+      commissionRate: Number(commissionRate),
       storeAddress,
       productCategories: productCategories
         ? JSON.parse(productCategories)
@@ -479,9 +479,9 @@ async function vendorDetails(request, response) {
   try {
     const vendorId = request.vendorId;
 
-    const vendor = await Vendor.findById(vendorId).select(
-      "-password -refresh_token"
-    );
+    const vendor = await Vendor.findById(vendorId)
+      .select("-password -refresh_token")
+      .populate("bank_details");
 
     return response.json({
       message: "user details",

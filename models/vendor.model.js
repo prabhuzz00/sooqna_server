@@ -17,6 +17,12 @@ const vendorSchema = new mongoose.Schema({
   productCategories: { type: [String], default: [] },
   commissionRate: { type: Number, required: true },
   paymentDetails: { type: String, required: true },
+  bank_details: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "bank",
+    },
+  ],
   taxIdentificationNumber: { type: String },
   termsAgreement: { type: Boolean, required: true },
   isVerified: { type: Boolean, default: false },
