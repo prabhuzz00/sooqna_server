@@ -3,6 +3,7 @@ import vendorAuth from "../middlewares/vendorAuth.js";
 import auth from "../middlewares/auth.js";
 import {
   createWithdrawalController,
+  getAllWithdrawals,
   getWithdrawalsByVendor,
   updateWithdrawalStatusController,
 } from "../controllers/withdrawal.controller.js";
@@ -16,5 +17,7 @@ withdrawalRouter.put(
   auth,
   updateWithdrawalStatusController
 );
+
+withdrawalRouter.get("/admin-withdrawals", auth, getAllWithdrawals);
 
 export default withdrawalRouter;

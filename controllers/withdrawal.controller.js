@@ -104,8 +104,23 @@ export const updateWithdrawalStatusController = async (request, response) => {
       });
     }
 
-    // If status is "Rejected", refund vendor
-    if (withdrawal_status === "Rejected") {
+    // If already rejected, disallow status changes to anything else
+    if (
+      withdrawal.withdrawal_status === "Rejected" &&
+      withdrawal_status !== "Rejected"
+    ) {
+      return response.status(400).json({
+        message: "Rejected withdrawal status cannot be changed",
+        success: false,
+        error: true,
+      });
+    }
+
+    // If status is "Rejected" now (and it was not before), refund vendor
+    if (
+      withdrawal_status === "Rejected" &&
+      withdrawal.withdrawal_status !== "Rejected"
+    ) {
       const vendor = await Vendor.findById(withdrawal.vendorId);
       if (!vendor) {
         return response.status(404).json({
@@ -138,6 +153,40 @@ export const updateWithdrawalStatusController = async (request, response) => {
       message: error.message || "Internal server error",
       success: false,
       error: true,
+    });
+  }
+};
+
+export const getAllWithdrawals = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const total = await withdrawalModel.countDocuments();
+    const withdrawals = await withdrawalModel
+      .find({})
+      .populate("vendorId", "storeName ownerName") //
+      .populate("bank_details") // Optional
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    return res.status(200).json({
+      success: true,
+      data: withdrawals,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message || "Server error",
     });
   }
 };
