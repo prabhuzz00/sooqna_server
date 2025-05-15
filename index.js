@@ -23,6 +23,7 @@ import brandRouter from "./route/brand.route.js";
 import tagRouter from "./route/tag.route.js";
 import labelRouter from "./route/label.route.js";
 import bankRouter from "./route/bank.route.js";
+import withdrawalRouter from "./route/withdrawal.route.js";
 
 const app = express();
 app.use(cors());
@@ -61,6 +62,7 @@ app.use("/api/tags", tagRouter);
 app.use("/api/labels", labelRouter);
 app.use("/api/brands", brandRouter);
 app.use("/api/bank", bankRouter);
+app.use("/api/withdrawal", withdrawalRouter);
 
 connectDB().then(() => {
   app.listen(process.env.PORT, () => {

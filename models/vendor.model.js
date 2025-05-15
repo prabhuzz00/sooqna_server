@@ -15,7 +15,7 @@ const vendorSchema = new mongoose.Schema({
   storeLogo: [{ type: String }],
   storeBanner: [{ type: String }],
   productCategories: { type: [String], default: [] },
-  commissionRate: { type: Number, required: true },
+  commissionRate: { type: Number, default: 0 },
   paymentDetails: { type: String, required: true },
   bank_details: [
     {

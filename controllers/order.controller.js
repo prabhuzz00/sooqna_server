@@ -123,7 +123,7 @@ export async function getPendingOrderController(request, response) {
 
     const { page, limit } = request.query;
 
-    const orderlist = await OrderModel.find({ order_status: "pending" })
+    const orderlist = await OrderModel.find({ order_status: "Pending" })
       .sort({ createdAt: -1 })
       .populate("delivery_address userId")
       .skip((page - 1) * limit)
@@ -414,102 +414,6 @@ export const captureOrderPaypalController = async (request, response) => {
   }
 };
 
-// export const updateOrderStatusController = async (request, response) => {
-//   try {
-//     const { id, order_status } = request.body;
-//     console.log("order status received:", order_status);
-
-//     const order = await OrderModel.findById(id);
-//     if (!order) {
-//       return response.status(404).json({
-//         message: "Order not found",
-//         success: false,
-//         error: true,
-//       });
-//     }
-
-//     const vendorMap = new Map(); // vendorId -> totalPrice
-
-//     order.products.forEach((product) => {
-//       const { vendorId, price } = product;
-//       if (!vendorId || !price) return;
-
-//       if (!vendorMap.has(vendorId)) {
-//         vendorMap.set(vendorId, 0);
-//       }
-
-//       vendorMap.set(vendorId, vendorMap.get(vendorId) + price);
-//     });
-
-//     for (const [vendorId, totalPrice] of vendorMap.entries()) {
-//       const vendor = await VendorModel.findById(vendorId);
-//       if (!vendor) {
-//         console.warn(`Vendor with ID ${vendorId} not found`);
-//         continue;
-//       }
-
-//       const commissionRate = vendor.commissionRate || 0;
-//       // console.log('commissionRate : ', commissionRate)
-//       const netAmount = totalPrice - (commissionRate / 100) * totalPrice;
-
-//       if (order_status === "confirm") {
-//         const newDueBalance = (vendor.dueBalance || 0) + netAmount;
-
-//         await VendorModel.findByIdAndUpdate(vendorId, {
-//           dueBalance: newDueBalance,
-//         });
-
-//         console.log(
-//           `Vendor ${vendorId} CONFIRMED: Added ${netAmount} to dueBalance`
-//         );
-//       }
-
-//       if (order_status === "delivered") {
-//         const newDueBalance = Math.max((vendor.dueBalance || 0) - netAmount, 0);
-//         const newAvailableBalance = (vendor.availableBalance || 0) + netAmount;
-
-//         await VendorModel.findByIdAndUpdate(vendorId, {
-//           dueBalance: newDueBalance,
-//           availableBalance: newAvailableBalance,
-//         });
-
-//         console.log(
-//           `Vendor ${vendorId} DELIVERED: Moved ${netAmount} from due to available balance`
-//         );
-//       }
-//     }
-
-//     // Now update the Order in one shot: (order_status + push statusHistory)
-//     const updateOrder = await OrderModel.findByIdAndUpdate(
-//       id,
-//       {
-//         order_status,
-//         $push: {
-//           statusHistory: {
-//             status: order_status,
-//             updatedAt: new Date(),
-//           },
-//         },
-//       },
-//       { new: true }
-//     );
-
-//     return response.json({
-//       message: "Order status updated successfully",
-//       success: true,
-//       error: false,
-//       data: updateOrder,
-//     });
-//   } catch (error) {
-//     console.error("Error updating order status:", error);
-//     return response.status(500).json({
-//       message: error.message || error,
-//       error: true,
-//       success: false,
-//     });
-//   }
-// };
-
 export const updateOrderStatusController = async (request, response) => {
   try {
     const { id, order_status } = request.body;
@@ -524,59 +428,53 @@ export const updateOrderStatusController = async (request, response) => {
       });
     }
 
-    const vendorMap = new Map(); // vendorId -> totalPrice (including quantity)
+    // --- Step 1: If order_status is "Received", update dueBalance ---
+    if (order_status === "Received") {
+      for (const product of order.products) {
+        if (product.vendorId) {
+          const vendor = await Vendor.findById(product.vendorId);
+          if (vendor) {
+            const vendorEarning =
+              product.subTotal * ((100 - vendor.commissionRate) / 100);
 
-    order.products.forEach((product) => {
-      const { vendorId, price, quantity = 1 } = product;
-      if (!vendorId || !price) return;
-
-      const total = price * quantity;
-
-      if (!vendorMap.has(vendorId)) {
-        vendorMap.set(vendorId, 0);
+            vendor.dueBalance += vendorEarning;
+            await vendor.save();
+          }
+        }
       }
+    }
 
-      vendorMap.set(vendorId, vendorMap.get(vendorId) + total);
-    });
+    // --- Step 2: If order_status is "Delivered", transfer dueBalance to availableBalance ---
+    if (order_status === "Delivered") {
+      for (const product of order.products) {
+        if (product.vendorId) {
+          const vendor = await Vendor.findById(product.vendorId);
+          if (vendor) {
+            const vendorEarning =
+              product.subTotal * ((100 - vendor.commissionRate) / 100);
 
-    for (const [vendorId, totalPrice] of vendorMap.entries()) {
-      const vendor = await Vendor.findById(vendorId);
-      if (!vendor) {
-        console.warn(`Vendor with ID ${vendorId} not found`);
-        continue;
+            vendor.availableBalance += vendorEarning;
+            vendor.dueBalance -= vendorEarning;
+            await vendor.save();
+          }
+        }
       }
+    }
 
-      const commissionRate = vendor.commissionRate || 0;
-      const netAmount = totalPrice - (commissionRate / 100) * totalPrice;
+    // --- Step 3: If order_status is "Canceled", remove dueBalance ---
+    if (order_status === "Canceled") {
+      for (const product of order.products) {
+        if (product.vendorId) {
+          const vendor = await Vendor.findById(product.vendorId);
+          if (vendor) {
+            const vendorEarning =
+              product.subTotal * ((100 - vendor.commissionRate) / 100);
 
-      if (order_status === "confirm") {
-        const newDueBalance = (vendor.dueBalance || 0) + netAmount;
-
-        await Vendor.findByIdAndUpdate(vendorId, {
-          dueBalance: newDueBalance,
-        });
-
-        console.log(
-          `Vendor ${vendorId} CONFIRMED: Added ${netAmount.toFixed(
-            2
-          )} to dueBalance`
-        );
-      }
-
-      if (order_status === "delivered") {
-        const newDueBalance = Math.max((vendor.dueBalance || 0) - netAmount, 0);
-        const newAvailableBalance = (vendor.availableBalance || 0) + netAmount;
-
-        await Vendor.findByIdAndUpdate(vendorId, {
-          dueBalance: newDueBalance,
-          availableBalance: newAvailableBalance,
-        });
-
-        console.log(
-          `Vendor ${vendorId} DELIVERED: Moved ${netAmount.toFixed(
-            2
-          )} from due to available balance`
-        );
+            vendor.dueBalance -= vendorEarning;
+            if (vendor.dueBalance < 0) vendor.dueBalance = 0; // Optional safeguard
+            await vendor.save();
+          }
+        }
       }
     }
 

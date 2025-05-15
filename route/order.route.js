@@ -1,5 +1,6 @@
 import { Router } from "express";
 import auth from "../middlewares/auth.js";
+import vendorAuth from "../middlewares/vendorAuth.js";
 import {
   captureOrderPaypalController,
   createOrderController,
@@ -18,7 +19,6 @@ import {
   totalSalesVendorController,
   downloadInvoiceController,
 } from "../controllers/order.controller.js";
-import vendorAuth from "../middlewares/vendorAuth.js";
 
 const orderRouter = Router();
 
