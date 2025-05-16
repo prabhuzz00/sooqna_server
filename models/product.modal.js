@@ -119,7 +119,8 @@ const productSchema = mongoose.Schema(
       type: Boolean,
     },
     vendorId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Vendor",
       default: null,
     },
     barcode: {
