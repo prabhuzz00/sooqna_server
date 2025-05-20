@@ -83,24 +83,7 @@ const productSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
-    productRam: [
-      {
-        type: String,
-        default: null,
-      },
-    ],
-    size: [
-      {
-        type: String,
-        default: null,
-      },
-    ],
-    productWeight: [
-      {
-        type: String,
-        default: null,
-      },
-    ],
+
     bannerimages: [
       {
         type: String,
@@ -126,6 +109,23 @@ const productSchema = mongoose.Schema(
     barcode: {
       type: String,
     },
+
+    variation: [
+      {
+        color: {
+          label: { type: String, required: true },
+          images: [{ type: String, required: true }],
+        },
+        sizes: [
+          {
+            label: { type: String, required: true },
+            price: { type: Number, required: true },
+            countInStock: { type: Number, required: true },
+          },
+        ],
+      },
+    ],
+
     tags: {
       type: [String],
       default: [],

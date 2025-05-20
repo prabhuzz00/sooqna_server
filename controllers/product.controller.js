@@ -52,6 +52,7 @@ export async function uploadImages(request, response) {
   }
 }
 
+//banner image upload
 var bannerImage = [];
 export async function uploadBannerImages(request, response) {
   try {
@@ -88,60 +89,29 @@ export async function uploadBannerImages(request, response) {
   }
 }
 
-//create product
-export async function createProduct(request, response) {
+// color image upload
+var colorImagesArr = [];
+
+export async function uploadColorImages(request, response) {
   try {
-    let product = new ProductModel({
-      name: request.body.name,
-      arbName: request.body.arbName,
-      description: request.body.description,
-      arbDescription: request.body.arbDescription,
-      images: imagesArr,
-      bannerimages: bannerImage,
-      bannerTitleName: request.body.bannerTitleName,
-      isDisplayOnHomeBanner: request.body.isDisplayOnHomeBanner,
-      brand: request.body.brand,
-      price: request.body.price,
-      oldPrice: request.body.oldPrice,
-      catName: request.body.catName,
-      category: request.body.category,
-      catId: request.body.catId,
-      subCatId: request.body.subCatId,
-      subCat: request.body.subCat,
-      thirdsubCat: request.body.thirdsubCat,
-      thirdsubCatId: request.body.thirdsubCatId,
-      countInStock: request.body.countInStock,
-      rating: request.body.rating,
-      isFeatured: request.body.isFeatured,
-      discount: request.body.discount,
-      productRam: request.body.productRam,
-      size: request.body.size,
-      productWeight: request.body.productWeight,
-      isVerified: request.body.isVerified,
-      vendorId: request.body.vendorId,
-      barcode: request.body.barcode,
-      tags: request.body.tags,
-    });
+    colorImagesArr = [];
 
-    product = await product.save();
+    const images = request.files;
 
-    console.log(product);
+    const options = {
+      use_filename: true,
+      unique_filename: false,
+      overwrite: false,
+    };
 
-    if (!product) {
-      response.status(500).json({
-        error: true,
-        success: false,
-        message: "Product Not created",
-      });
+    for (let i = 0; i < images?.length; i++) {
+      const result = await cloudinary.uploader.upload(images[i].path, options);
+      colorImagesArr.push(result.secure_url);
+      fs.unlinkSync(`uploads/${images[i].filename}`);
     }
 
-    imagesArr = [];
-
     return response.status(200).json({
-      message: "Product Created successfully",
-      error: false,
-      success: true,
-      product: product,
+      images: colorImagesArr,
     });
   } catch (error) {
     return response.status(500).json({
@@ -151,6 +121,153 @@ export async function createProduct(request, response) {
     });
   }
 }
+
+//create product
+// export async function createProduct(request, response) {
+//   try {
+//     let product = new ProductModel({
+//       name: request.body.name,
+//       arbName: request.body.arbName,
+//       description: request.body.description,
+//       arbDescription: request.body.arbDescription,
+//       images: imagesArr,
+//       bannerimages: bannerImage,
+//       bannerTitleName: request.body.bannerTitleName,
+//       isDisplayOnHomeBanner: request.body.isDisplayOnHomeBanner,
+//       brand: request.body.brand,
+//       price: request.body.price,
+//       oldPrice: request.body.oldPrice,
+//       catName: request.body.catName,
+//       category: request.body.category,
+//       catId: request.body.catId,
+//       subCatId: request.body.subCatId,
+//       subCat: request.body.subCat,
+//       thirdsubCat: request.body.thirdsubCat,
+//       thirdsubCatId: request.body.thirdsubCatId,
+//       countInStock: request.body.countInStock,
+//       rating: request.body.rating,
+//       isFeatured: request.body.isFeatured,
+//       discount: request.body.discount,
+//       productRam: request.body.productRam,
+//       size: request.body.size,
+//       productWeight: request.body.productWeight,
+//       isVerified: request.body.isVerified,
+//       vendorId: request.body.vendorId,
+//       barcode: request.body.barcode,
+//       tags: request.body.tags,
+//     });
+
+//     product = await product.save();
+
+//     console.log(product);
+
+//     if (!product) {
+//       response.status(500).json({
+//         error: true,
+//         success: false,
+//         message: "Product Not created",
+//       });
+//     }
+
+//     imagesArr = [];
+
+//     return response.status(200).json({
+//       message: "Product Created successfully",
+//       error: false,
+//       success: true,
+//       product: product,
+//     });
+//   } catch (error) {
+//     return response.status(500).json({
+//       message: error.message || error,
+//       error: true,
+//       success: false,
+//     });
+//   }
+// }
+
+export const createProduct = async (req, res) => {
+  try {
+    const {
+      name,
+      arbName,
+      description,
+      arbDescription,
+      images,
+      brand,
+      price,
+      oldPrice,
+      catName,
+      catId,
+      subCat,
+      subCatId,
+      thirdsubCat,
+      thirdsubCatId,
+      category,
+      countInStock,
+      rating,
+      isFeatured,
+      discount,
+      sale,
+      bannerimages,
+      bannerTitleName,
+      isDisplayOnHomeBanner,
+      isVerified,
+      vendorId,
+      barcode,
+      variation,
+      tags,
+    } = req.body;
+
+    const newProduct = new ProductModel({
+      name,
+      arbName,
+      description,
+      arbDescription,
+      images,
+      brand,
+      price,
+      oldPrice,
+      catName,
+      catId,
+      subCat,
+      subCatId,
+      thirdsubCat,
+      thirdsubCatId,
+      category,
+      countInStock,
+      rating,
+      isFeatured,
+      discount,
+      sale,
+      bannerimages,
+      bannerTitleName,
+      isDisplayOnHomeBanner,
+      isVerified,
+      vendorId,
+      barcode,
+      variation,
+      tags,
+    });
+
+    await newProduct.save();
+    res
+      .status(200)
+      .json({
+        error: false,
+        success: true,
+        product: newProduct,
+        message: "Product created Successfully",
+      });
+  } catch (error) {
+    console.error("Create product error:", error);
+    res.status(500).json({
+      error: true,
+      success: false,
+      message: "Product creation failed.",
+    });
+  }
+};
 
 //get all products
 export async function getAllProducts(request, response) {

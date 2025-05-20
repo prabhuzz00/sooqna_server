@@ -42,6 +42,7 @@ import {
   getAllProductsForVendorId,
   verifyProduct,
   searchByImage,
+  uploadColorImages,
 } from "../controllers/product.controller.js";
 
 import { removeImageFromCloudinary } from "../controllers/category.controller.js";
@@ -50,6 +51,12 @@ import vendorAuth from "../middlewares/vendorAuth.js";
 const productRouter = Router();
 
 productRouter.post("/uploadImages", auth, upload.array("images"), uploadImages);
+productRouter.post(
+  "/uploadColorImages",
+  auth,
+  upload.array("colorImages"),
+  uploadColorImages
+);
 productRouter.post(
   "/uploadBannerImages",
   auth,
