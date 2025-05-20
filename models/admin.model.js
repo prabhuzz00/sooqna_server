@@ -66,7 +66,7 @@ const adminSchema = mongoose.Schema(
     role: {
       type: String,
       enum: ["ADMIN", "SUPERADMIN"],
-      default: "SUPERADMIN",
+      default: "ADMIN",
     },
     signUpWithGoogle: {
       type: Boolean,
@@ -93,6 +93,6 @@ const adminSchema = mongoose.Schema(
 
 adminSchema.index({ currentLocation: "2dsphere" });
 
-const AdminModel = mongoose.model("User", adminSchema);
+const AdminModel = mongoose.model("Admin", adminSchema);
 
 export default AdminModel;

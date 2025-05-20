@@ -24,6 +24,7 @@ import tagRouter from "./route/tag.route.js";
 import labelRouter from "./route/label.route.js";
 import bankRouter from "./route/bank.route.js";
 import withdrawalRouter from "./route/withdrawal.route.js";
+import adminRouter from "./route/admin.route.js";
 
 const app = express();
 app.use(cors());
@@ -46,6 +47,7 @@ app.get("/", (request, response) => {
 });
 
 app.use("/api/user", userRouter);
+app.use("/api/admin", adminRouter);
 app.use("/api/category", categoryRouter);
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
