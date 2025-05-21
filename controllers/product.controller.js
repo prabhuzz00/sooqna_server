@@ -251,14 +251,12 @@ export const createProduct = async (req, res) => {
     });
 
     await newProduct.save();
-    res
-      .status(200)
-      .json({
-        error: false,
-        success: true,
-        product: newProduct,
-        message: "Product created Successfully",
-      });
+    res.status(200).json({
+      error: false,
+      success: true,
+      product: newProduct,
+      message: "Product created Successfully",
+    });
   } catch (error) {
     console.error("Create product error:", error);
     res.status(500).json({
@@ -1156,6 +1154,7 @@ export async function updateProduct(request, response) {
         isVerified: request.body.isVerified,
         vendorId: request.body.vendorId,
         barcode: request.body.barcode,
+        variation: request.body.variation,
       },
       { new: true }
     );
