@@ -466,12 +466,63 @@ export async function getAllProductsForVendorId(request, response) {
 }
 
 //get all products by category id
+// export async function getAllProductsByCatId(request, response) {
+//   try {
+//     const page = parseInt(request.query.page) || 1;
+//     const perPage = parseInt(request.query.perPage) || 10000;
+
+//     const totalPosts = await ProductModel.countDocuments();
+//     const totalPages = Math.ceil(totalPosts / perPage);
+
+//     if (page > totalPages) {
+//       return response.status(404).json({
+//         message: "Page not found",
+//         success: false,
+//         error: true,
+//       });
+//     }
+
+//     const products = await ProductModel.find({
+//       catId: request.params.id,
+//     })
+//       .populate("category")
+//       .skip((page - 1) * perPage)
+//       .limit(perPage)
+//       .exec();
+
+//     if (!products) {
+//       response.status(500).json({
+//         error: true,
+//         success: false,
+//       });
+//     }
+
+//     return response.status(200).json({
+//       error: false,
+//       success: true,
+//       products: products,
+//       totalPages: totalPages,
+//       page: page,
+//     });
+//   } catch (error) {
+//     return response.status(500).json({
+//       message: error.message || error,
+//       error: true,
+//       success: false,
+//     });
+//   }
+// }
+
 export async function getAllProductsByCatId(request, response) {
   try {
     const page = parseInt(request.query.page) || 1;
     const perPage = parseInt(request.query.perPage) || 10000;
 
-    const totalPosts = await ProductModel.countDocuments();
+    // Count only verified products for the given category
+    const totalPosts = await ProductModel.countDocuments({
+      catId: request.params.id,
+      isVerified: true,
+    });
     const totalPages = Math.ceil(totalPosts / perPage);
 
     if (page > totalPages) {
@@ -482,18 +533,21 @@ export async function getAllProductsByCatId(request, response) {
       });
     }
 
+    // Find products where isVerified is true
     const products = await ProductModel.find({
       catId: request.params.id,
+      isVerified: true,
     })
       .populate("category")
       .skip((page - 1) * perPage)
       .limit(perPage)
       .exec();
 
-    if (!products) {
-      response.status(500).json({
+    if (!products || products.length === 0) {
+      return response.status(404).json({
         error: true,
         success: false,
+        message: "No verified products found for this category",
       });
     }
 
@@ -1608,6 +1662,65 @@ export async function getProductSizeById(request, response) {
   }
 }
 
+// export async function filters(request, response) {
+//   const {
+//     catId,
+//     subCatId,
+//     thirdsubCatId,
+//     minPrice,
+//     maxPrice,
+//     rating,
+//     page,
+//     limit,
+//   } = request.body;
+
+//   const filters = {};
+
+//   if (catId?.length) {
+//     filters.catId = { $in: catId };
+//   }
+
+//   if (subCatId?.length) {
+//     filters.subCatId = { $in: subCatId };
+//   }
+
+//   if (thirdsubCatId?.length) {
+//     filters.thirdsubCatId = { $in: thirdsubCatId };
+//   }
+
+//   if (minPrice || maxPrice) {
+//     filters.price = { $gte: +minPrice || 0, $lte: +maxPrice || Infinity };
+//   }
+
+//   if (rating?.length) {
+//     filters.rating = { $in: rating };
+//   }
+
+//   try {
+//     const products = await ProductModel.find(filters)
+//       .populate("category")
+//       .skip((page - 1) * limit)
+//       .limit(parseInt(limit));
+
+//     const total = await ProductModel.countDocuments(filters);
+
+//     return response.status(200).json({
+//       error: false,
+//       success: true,
+//       products: products,
+//       total: total,
+//       page: parseInt(page),
+//       totalPages: Math.ceil(total / limit),
+//     });
+//   } catch (error) {
+//     return response.status(500).json({
+//       message: error.message || error,
+//       error: true,
+//       success: false,
+//     });
+//   }
+// }
+
 export async function filters(request, response) {
   const {
     catId,
@@ -1621,6 +1734,9 @@ export async function filters(request, response) {
   } = request.body;
 
   const filters = {};
+
+  // Add isVerified condition
+  filters.isVerified = true;
 
   if (catId?.length) {
     filters.catId = { $in: catId };
@@ -1649,6 +1765,14 @@ export async function filters(request, response) {
       .limit(parseInt(limit));
 
     const total = await ProductModel.countDocuments(filters);
+
+    if (!products || products.length === 0) {
+      return response.status(404).json({
+        error: true,
+        success: false,
+        message: "No verified products found with the applied filters",
+      });
+    }
 
     return response.status(200).json({
       error: false,

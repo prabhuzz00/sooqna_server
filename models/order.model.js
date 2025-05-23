@@ -11,11 +11,17 @@ const orderSchema = new mongoose.Schema(
         productId: {
           type: String,
         },
-        productTitle: {
+        name: {
           type: String,
         },
         quantity: {
           type: Number,
+        },
+        selectedColor: {
+          type: String,
+        },
+        size: {
+          type: String,
         },
         price: {
           type: Number,
@@ -52,6 +58,12 @@ const orderSchema = new mongoose.Schema(
     delivery_address: {
       type: mongoose.Schema.ObjectId,
       ref: "address",
+    },
+    couponCode: {
+      type: String,
+    },
+    couponDiscount: {
+      type: Number,
     },
     totalAmt: {
       type: Number,

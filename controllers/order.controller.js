@@ -22,6 +22,8 @@ export const createOrderController = async (request, response) => {
       payment_status: request.body.payment_status,
       delivery_address: request.body.delivery_address,
       totalAmt: request.body.totalAmt,
+      couponCode: request.body.couponCode,
+      couponDiscount: request.body.couponDiscount,
       barcode: request.body.barcode,
       qrCode: qrCodeImg,
       date: request.body.date,
@@ -1121,7 +1123,7 @@ export const downloadInvoiceController = async (req, res) => {
 
       doc
         .fillColor("#000")
-        .text(p.productTitle || "N/A", 50, y)
+        .text(p.name || "N/A", 50, y)
         // .text("06", 170, y)
         .text(p.quantity.toString(), 220, y)
         .text(`${gstPercent}%`, 260, y)
