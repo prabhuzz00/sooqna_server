@@ -123,69 +123,6 @@ export async function uploadColorImages(request, response) {
 }
 
 //create product
-// export async function createProduct(request, response) {
-//   try {
-//     let product = new ProductModel({
-//       name: request.body.name,
-//       arbName: request.body.arbName,
-//       description: request.body.description,
-//       arbDescription: request.body.arbDescription,
-//       images: imagesArr,
-//       bannerimages: bannerImage,
-//       bannerTitleName: request.body.bannerTitleName,
-//       isDisplayOnHomeBanner: request.body.isDisplayOnHomeBanner,
-//       brand: request.body.brand,
-//       price: request.body.price,
-//       oldPrice: request.body.oldPrice,
-//       catName: request.body.catName,
-//       category: request.body.category,
-//       catId: request.body.catId,
-//       subCatId: request.body.subCatId,
-//       subCat: request.body.subCat,
-//       thirdsubCat: request.body.thirdsubCat,
-//       thirdsubCatId: request.body.thirdsubCatId,
-//       countInStock: request.body.countInStock,
-//       rating: request.body.rating,
-//       isFeatured: request.body.isFeatured,
-//       discount: request.body.discount,
-//       productRam: request.body.productRam,
-//       size: request.body.size,
-//       productWeight: request.body.productWeight,
-//       isVerified: request.body.isVerified,
-//       vendorId: request.body.vendorId,
-//       barcode: request.body.barcode,
-//       tags: request.body.tags,
-//     });
-
-//     product = await product.save();
-
-//     console.log(product);
-
-//     if (!product) {
-//       response.status(500).json({
-//         error: true,
-//         success: false,
-//         message: "Product Not created",
-//       });
-//     }
-
-//     imagesArr = [];
-
-//     return response.status(200).json({
-//       message: "Product Created successfully",
-//       error: false,
-//       success: true,
-//       product: product,
-//     });
-//   } catch (error) {
-//     return response.status(500).json({
-//       message: error.message || error,
-//       error: true,
-//       success: false,
-//     });
-//   }
-// }
-
 export const createProduct = async (req, res) => {
   try {
     const {
@@ -332,46 +269,6 @@ export const verifyProduct = async (req, res) => {
       .json({ error: true, message: "Server error: " + error.message });
   }
 };
-
-//get all products by vendorID where isVerified false
-// export async function getAllUnverifyProducts(request, response) {
-//   try {
-//     const { page, limit } = request.query;
-//     const totalProducts = await ProductModel.find();
-
-//     const products = await ProductModel.find({ isVerified: false })
-//       .populate("vendorId", "storeName ownerName")
-//       .sort({ createdAt: -1 })
-//       .skip((page - 1) * limit)
-//       .limit(parseInt(limit));
-
-//     const total = await ProductModel.countDocuments(products);
-
-//     if (!products) {
-//       return response.status(400).json({
-//         error: true,
-//         success: false,
-//       });
-//     }
-
-//     return response.status(200).json({
-//       error: false,
-//       success: true,
-//       products: products,
-//       total: total,
-//       page: parseInt(page),
-//       totalPages: Math.ceil(total / limit),
-//       totalCount: totalProducts?.length,
-//       totalProducts: totalProducts,
-//     });
-//   } catch (error) {
-//     return response.status(500).json({
-//       message: error.message || error,
-//       error: true,
-//       success: false,
-//     });
-//   }
-// }
 
 export async function getAllUnverifyProducts(request, response) {
   try {
@@ -1661,65 +1558,6 @@ export async function getProductSizeById(request, response) {
     });
   }
 }
-
-// export async function filters(request, response) {
-//   const {
-//     catId,
-//     subCatId,
-//     thirdsubCatId,
-//     minPrice,
-//     maxPrice,
-//     rating,
-//     page,
-//     limit,
-//   } = request.body;
-
-//   const filters = {};
-
-//   if (catId?.length) {
-//     filters.catId = { $in: catId };
-//   }
-
-//   if (subCatId?.length) {
-//     filters.subCatId = { $in: subCatId };
-//   }
-
-//   if (thirdsubCatId?.length) {
-//     filters.thirdsubCatId = { $in: thirdsubCatId };
-//   }
-
-//   if (minPrice || maxPrice) {
-//     filters.price = { $gte: +minPrice || 0, $lte: +maxPrice || Infinity };
-//   }
-
-//   if (rating?.length) {
-//     filters.rating = { $in: rating };
-//   }
-
-//   try {
-//     const products = await ProductModel.find(filters)
-//       .populate("category")
-//       .skip((page - 1) * limit)
-//       .limit(parseInt(limit));
-
-//     const total = await ProductModel.countDocuments(filters);
-
-//     return response.status(200).json({
-//       error: false,
-//       success: true,
-//       products: products,
-//       total: total,
-//       page: parseInt(page),
-//       totalPages: Math.ceil(total / limit),
-//     });
-//   } catch (error) {
-//     return response.status(500).json({
-//       message: error.message || error,
-//       error: true,
-//       success: false,
-//     });
-//   }
-// }
 
 export async function filters(request, response) {
   const {

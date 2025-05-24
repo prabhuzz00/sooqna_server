@@ -106,25 +106,21 @@ productRouter.delete(
   removeImageFromCloudinary
 );
 productRouter.put("/updateProduct/:id", auth, updateProduct);
-
 productRouter.post("/productRAMS/create", auth, createProductRAMS);
 productRouter.delete("/productRAMS/:id", auth, deleteProductRAMS);
 productRouter.put("/productRAMS/:id", auth, updateProductRam);
 productRouter.get("/productRAMS/get", getProductRams);
 productRouter.get("/productRAMS/:id", getProductRamsById);
-
 productRouter.post("/productWeight/create", auth, createProductWEIGHT);
 productRouter.delete("/productWeight/:id", auth, deleteProductWEIGHT);
 productRouter.put("/productWeight/:id", auth, updateProductWeight);
 productRouter.get("/productWeight/get", getProductWeight);
 productRouter.get("/productWeight/:id", getProductWeightById);
-
 productRouter.post("/productSize/create", auth, createProductSize);
 productRouter.delete("/productSize/:id", auth, deleteProductSize);
 productRouter.put("/productSize/:id", auth, updateProductSize);
 productRouter.get("/productSize/get", getProductSize);
 productRouter.get("/productSize/:id", getProductSizeById);
-
 productRouter.post("/filters", filters);
 productRouter.post("/sortBy", sortBy);
 productRouter.post("/search/get", searchProductController);
