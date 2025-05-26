@@ -26,6 +26,7 @@ import bankRouter from "./route/bank.route.js";
 import withdrawalRouter from "./route/withdrawal.route.js";
 import adminRouter from "./route/admin.route.js";
 import couponRouter from "./route/coupon.route.js";
+import searchRouter from "./route/search.route.js";
 
 const app = express();
 app.use(cors());
@@ -67,6 +68,7 @@ app.use("/api/brands", brandRouter);
 app.use("/api/bank", bankRouter);
 app.use("/api/withdrawal", withdrawalRouter);
 app.use("/api/coupons", couponRouter);
+app.use("/api/search", searchRouter);
 
 connectDB().then(() => {
   app.listen(process.env.PORT, () => {
