@@ -17,6 +17,7 @@ const auth = async (request, response, next) => {
     }
 
     const decode = await jwt.verify(token, process.env.SECRET_KEY_ACCESS_TOKEN);
+    console.log("Decoded token:", decode);
 
     if (!decode) {
       return response.status(401).json({

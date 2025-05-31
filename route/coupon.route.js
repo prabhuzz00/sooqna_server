@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   createCoupon,
   deleteCoupon,
+  getCouponSummary,
   incrementCouponUsage,
   listCoupons,
   updateCoupon,
@@ -16,7 +17,7 @@ const couponRouter = Router();
 couponRouter.post("/create", createCoupon);
 
 // Validate a coupon (Public, rate-limited)
-couponRouter.post("/validate", validateCoupon);
+couponRouter.post("/validate", auth, validateCoupon);
 
 // List all coupons (Admin only, with pagination)
 couponRouter.get("/", listCoupons);
@@ -29,5 +30,8 @@ couponRouter.delete("/:id", auth, deleteCoupon);
 
 // Increment coupon usage (Order-based authentication)
 couponRouter.post("/:id/use", auth, incrementCouponUsage);
+
+//get Coupon Summary
+couponRouter.get("/summary", getCouponSummary);
 
 export default couponRouter;
