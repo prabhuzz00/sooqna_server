@@ -9,7 +9,10 @@ import genertedRefreshToken from "../utils/generatedRefreshToken.js";
 
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
-import { request } from "http";
+import sendEmailFun from "../config/sendEmail.js";
+import becomeVendorEmail from "../utils/becomeVendorEmailTemp.js";
+import vendorActivatedEmail from "../utils/activateVendorEmailTemp.js";
+import vendorStatusEmail from "../utils/activateVendorEmailTemp.js";
 
 cloudinary.config({
   cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -168,6 +171,17 @@ const createVendor = async (req, res) => {
     // Exclude password from response
     const vendorResponse = vendor.toObject();
     delete vendorResponse.password;
+
+    await sendEmailFun({
+      sendTo: emailAddress,
+      subject: "Your Vendor Application Has Been Submitted Successfully!",
+      text: "",
+      html: becomeVendorEmail(
+        ownerName,
+        storeName,
+        emailAddress
+      )
+    });
 
     res.status(201).json({
       error: false,
@@ -385,6 +399,13 @@ const updateVendorStatus = async (req, res) => {
       { new: true, select: "-password" } // Exclude password
     );
 
+    await sendEmailFun({
+      sendTo: updatedVendor.emailAddress,
+      subject: `Your Vendor Account has been ${newStatus ? "Activated" : "Deactivated"}!`,
+      text: "",
+      html: vendorStatusEmail(updatedVendor.ownerName, updatedVendor.storeName, newStatus)
+    })
+
     res.status(200).json({
       error: false,
       message: `Vendor ${newStatus ? "activated" : "deactivated"} successfully`,
@@ -401,9 +422,29 @@ const updateVendorStatus = async (req, res) => {
 //login
 async function loginVendor(request, response) {
   try {
-    const { phoneNumber, password } = request.body;
+    const { email,phoneNumber, password } = request.body;
     // console.log("email : ", email);
-    const vendor = await Vendor.findOne({ phoneNumber: phoneNumber });
+
+    if (!email && !phoneNumber) {
+      return response.status(400).json({
+        message: "Please provide email or phone number for login.",
+        error: true,
+        success: false,
+      });
+    }
+
+    let vendor;
+
+    if (email) {
+      vendor = await Vendor.findOne({ email: email });
+      console.log("Attempting to find user by email:", email);
+    } else if (phoneNumber) {
+      vendor = await Vendor.findOne({ phoneNumber: phoneNumber });
+      console.log("Attempting to find user by phone:", phoneNumber);
+    }
+
+    // const vendor = await Vendor.findOne({ phoneNumber: phoneNumber });
+
     console.log("vendor : ", vendor);
     if (!vendor) {
       return response.status(400).json({
