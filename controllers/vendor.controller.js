@@ -106,7 +106,7 @@ const createVendor = async (req, res) => {
       storeAddress,
       productCategories,
       commissionRate,
-      paymentDetails,
+      // paymentDetails,
       taxIdentificationNumber,
       termsAgreement,
       isVerified,
@@ -159,7 +159,7 @@ const createVendor = async (req, res) => {
       storeBanner: bannerImage,
       productCategories: JSON.parse(productCategories || "[]"),
       commissionRate: Number(commissionRate),
-      paymentDetails,
+      // paymentDetails,
       taxIdentificationNumber,
       termsAgreement: termsAgreement === "true" || termsAgreement === true,
       isVerified: isVerified === "true" || isVerified === true,
@@ -297,7 +297,7 @@ const editVendor = async (req, res) => {
         ? JSON.parse(productCategories)
         : undefined,
       // commissionRate: commissionRate ? Number(commissionRate) : undefined,
-      paymentDetails,
+      // paymentDetails,
       taxIdentificationNumber,
       termsAgreement: termsAgreement === "true" || termsAgreement === true,
       isVerified: isVerified === "true" || isVerified === true,
@@ -436,7 +436,7 @@ async function loginVendor(request, response) {
     let vendor;
 
     if (email) {
-      vendor = await Vendor.findOne({ email: email });
+      vendor = await Vendor.findOne({ emailAddress: email });
       console.log("Attempting to find user by email:", email);
     } else if (phoneNumber) {
       vendor = await Vendor.findOne({ phoneNumber: phoneNumber });
