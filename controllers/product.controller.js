@@ -321,15 +321,14 @@ export async function getAllProductsForVendorId(request, response) {
     const totalProducts = await ProductModel.find({
       vendorId: { $eq: vendorId, $ne: null },
     });
-
     // Find products for the given vendorId with pagination
     const products = await ProductModel.find({
       vendorId: { $eq: vendorId, $ne: null },
     })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(parseInt(limit));
-
+      .limit(parseInt(limit))
+      .populate("category");
     // Count total documents for the given vendorId
     const total = await ProductModel.countDocuments({
       vendorId: { $eq: vendorId, $ne: null },
