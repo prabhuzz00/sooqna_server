@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { type } from "os";
 
 const categorySchema = mongoose.Schema(
   {
@@ -17,6 +18,10 @@ const categorySchema = mongoose.Schema(
     ],
     parentCatName: {
       type: String,
+    },
+    isAdminCategory: {
+      type: Boolean,
+      default: false,
     },
     parentId: {
       type: mongoose.Schema.Types.ObjectId,
