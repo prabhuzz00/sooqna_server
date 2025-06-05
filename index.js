@@ -29,6 +29,7 @@ import couponRouter from "./route/coupon.route.js";
 import searchRouter from "./route/search.route.js";
 import siteSettingRouter from "./route/siteSetting.route.js";
 import shippingRouter from "./route/shipping.route.js";
+import reportRouter from "./route/report.route.js";
 
 const app = express();
 app.use(cors());
@@ -73,6 +74,7 @@ app.use("/api/coupons", couponRouter);
 app.use("/api/search", searchRouter);
 app.use("/api/site-settings", siteSettingRouter);
 app.use("/api/shipping-cost", shippingRouter);
+app.use("/api/report", reportRouter);
 
 connectDB().then(() => {
   app.listen(process.env.PORT, () => {
