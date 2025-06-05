@@ -29,6 +29,8 @@ export const createOrderController = async (request, response) => {
       date: request.body.date,
     });
 
+    console.log("products: ", request.body.products);
+
     if (!order) {
       response.status(500).json({
         error: true,
@@ -39,21 +41,38 @@ export const createOrderController = async (request, response) => {
     order = await order.save();
 
     for (let i = 0; i < request.body.products.length; i++) {
-      const product = await ProductModel.findOne({
-        _id: request.body.products[i].productId,
-      });
-      console.log(product);
+      const productData = request.body.products[i];
 
-      await ProductModel.findByIdAndUpdate(
-        request.body.products[i].productId,
+      const product = await ProductModel.findOne({
+        _id: productData.productId,
+      });
+
+      if (!product) continue;
+
+      // Update main product countInStock and sale
+      await ProductModel.findByIdAndUpdate(productData.productId, {
+        countInStock: parseInt(product.countInStock - productData.quantity),
+        sale: parseInt((product?.sale || 0) + productData.quantity),
+      });
+
+      // Update variation stock using MongoDB arrayFilters
+      await ProductModel.updateOne(
         {
-          countInStock: parseInt(
-            request.body.products[i].countInStock -
-              request.body.products[i].quantity
-          ),
-          sale: parseInt(product?.sale + request.body.products[i].quantity),
+          _id: productData.productId,
+          "variation.color.label": productData.selectedColor,
         },
-        { new: true }
+        {
+          $inc: {
+            "variation.$[variant].sizes.$[size].countInStock":
+              -productData.quantity,
+          },
+        },
+        {
+          arrayFilters: [
+            { "variant.color.label": productData.selectedColor },
+            { "size.label": productData.size },
+          ],
+        }
       );
     }
 
