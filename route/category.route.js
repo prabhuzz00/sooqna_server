@@ -16,6 +16,7 @@ categoryRouter.delete('/deteleImage',auth,removeImageFromCloudinary);
 categoryRouter.delete('/deleteVendorImage',vendorAuth,removeImageFromCloudinary);
 categoryRouter.delete('/:id',auth,deleteCategory);
 categoryRouter.put('/:id',auth,updatedCategory);
+categoryRouter.get('/getVendorCategories',vendorAuth, getCategories);
 
 
 export default categoryRouter;

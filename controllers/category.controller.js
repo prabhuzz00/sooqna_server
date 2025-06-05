@@ -56,6 +56,7 @@ export async function createCategory(request, response) {
       images: imagesArr,
       parentId: request.body.parentId,
       parentCatName: request.body.parentCatName,
+      isAdminCategory: request.body.isAdminCategory || false,
     });
 
     if (!category) {
@@ -282,6 +283,7 @@ export async function updatedCategory(request, response) {
       images: imagesArr.length > 0 ? imagesArr[0] : request.body.images,
       parentId: request.body.parentId,
       parentCatName: request.body.parentCatName,
+      isAdminCategory : request.body.isAdminCategory || false,
     },
     { new: true }
   );
@@ -302,4 +304,29 @@ export async function updatedCategory(request, response) {
     category: category,
     message: "Category updated successfully",
   });
+}
+
+export async function getVendorCategory(req,res){
+  try{
+    const categories = await CategoryModel.find({ isAdminCategory: false});
+    if (!categories) {
+      return res.status(404).json({
+        message: "No categories found",
+        error: true,
+        success: false,
+      });
+    }
+    return res.status(200).json({
+      error: false,
+      success: true,
+      data: categories,
+    });
+  }
+  catch(error){
+    return res.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
 }
