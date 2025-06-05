@@ -283,7 +283,7 @@ export async function updatedCategory(request, response) {
       images: imagesArr.length > 0 ? imagesArr[0] : request.body.images,
       parentId: request.body.parentId,
       parentCatName: request.body.parentCatName,
-      isAdminCategory : request.body.isAdminCategory || false,
+      isAdminCategory: request.body.isAdminCategory || false,
     },
     { new: true }
   );
@@ -306,24 +306,32 @@ export async function updatedCategory(request, response) {
   });
 }
 
-export async function getVendorCategory(req,res){
-  try{
-    const categories = await CategoryModel.find({ isAdminCategory: false});
-    if (!categories) {
-      return res.status(404).json({
-        message: "No categories found",
-        error: true,
-        success: false,
-      });
-    }
-    return res.status(200).json({
+export async function getVendorCategory(request, response) {
+  try {
+    const categories = await CategoryModel.find({ isAdminCategory: false });
+    const categoryMap = {};
+
+    categories.forEach((cat) => {
+      categoryMap[cat._id] = { ...cat._doc, children: [] };
+    });
+
+    const rootCategories = [];
+
+    categories.forEach((cat) => {
+      if (cat.parentId) {
+        categoryMap[cat.parentId].children.push(categoryMap[cat._id]);
+      } else {
+        rootCategories.push(categoryMap[cat._id]);
+      }
+    });
+
+    return response.status(200).json({
       error: false,
       success: true,
-      data: categories,
+      data: rootCategories,
     });
-  }
-  catch(error){
-    return res.status(500).json({
+  } catch (error) {
+    return response.status(500).json({
       message: error.message || error,
       error: true,
       success: false,
