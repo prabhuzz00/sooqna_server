@@ -75,6 +75,16 @@ const orderSchema = new mongoose.Schema(
     qrCode: {
       type: String,
     },
+    deliveryBoyId: {
+      type: mongoose.Types.ObjectId,
+      ref: "DeliveryBoy",
+      default: null,
+    },
+    deliveryStatus: {
+      type: String,
+      enum: ["Pending", "Assigned", "Picked", "Delivered", "Returned"],
+      default: "Pending",
+    },
   },
   {
     timestamps: true,

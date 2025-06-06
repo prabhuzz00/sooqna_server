@@ -30,6 +30,8 @@ import searchRouter from "./route/search.route.js";
 import siteSettingRouter from "./route/siteSetting.route.js";
 import shippingRouter from "./route/shipping.route.js";
 import reportRouter from "./route/report.route.js";
+import serviceZoneRouter from "./route/serviceZone.route.js";
+import deliveryBoyRouter from "./route/deliveryBoy.route.js";
 
 const app = express();
 app.use(cors());
@@ -75,6 +77,8 @@ app.use("/api/search", searchRouter);
 app.use("/api/site-settings", siteSettingRouter);
 app.use("/api/shipping-cost", shippingRouter);
 app.use("/api/report", reportRouter);
+app.use("/api/service-zones", serviceZoneRouter);
+app.use("/api/deliveryboy", deliveryBoyRouter);
 
 connectDB().then(() => {
   app.listen(process.env.PORT, () => {
