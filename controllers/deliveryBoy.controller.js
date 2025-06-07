@@ -71,6 +71,11 @@ export const loginDeliveryBoy = async (req, res) => {
    PUT   /api/deliveryboy/assign
    body: { deliveryBoyId, orderIds: [] }
 ────────────────────────────────────────── */
+/* ──────────────────────────────────────────
+   3️⃣  ADMIN → assign pending orders
+   PUT   /api/deliveryboy/assign
+   body: { deliveryBoyId, orderIds: [] }
+────────────────────────────────────────── */
 export const assignPendingOrders = async (req, res) => {
   try {
     const { deliveryBoyId, orderIds = [] } = req.body;
@@ -81,8 +86,8 @@ export const assignPendingOrders = async (req, res) => {
 
     /* only orders still pending */
     const result = await OrderModel.updateMany(
-      { _id: { $in: orderIds }, deliveryStatus: "Pending" },
-      { deliveryBoyId, deliveryStatus: "Assigned" }
+      { _id: { $in: orderIds }, order_status: "Received" },
+      { deliveryBoyId, order_status: "Picked" }
     );
 
     res.status(200).json({ success: true, modified: result.modifiedCount });

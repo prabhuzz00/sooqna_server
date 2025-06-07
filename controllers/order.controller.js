@@ -170,6 +170,40 @@ export async function getPendingOrderController(request, response) {
   }
 }
 
+//get recived order list
+
+export async function getRecivedOrderController(request, response) {
+  try {
+    const userId = request.userId; // order id
+
+    const { page, limit } = request.query;
+
+    const orderlist = await OrderModel.find({ order_status: "Received" })
+      .sort({ createdAt: -1 })
+      .populate("delivery_address userId")
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await OrderModel.countDocuments(orderlist);
+
+    return response.json({
+      message: "order list",
+      data: orderlist,
+      error: false,
+      success: true,
+      total: total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
 //get order return
 export async function getOrderReturnController(request, response) {
   try {
@@ -1221,5 +1255,59 @@ export const downloadInvoiceController = async (req, res) => {
   } catch (err) {
     console.error("Invoice generation error:", err);
     res.status(500).json({ message: "Error generating invoice" });
+  }
+};
+
+export const downloadShippingLabelController = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await OrderModel.findById(orderId)
+      .populate("userId")
+      .populate("delivery_address");
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const doc = new PDFDocument({ margin: 50 });
+
+    // Setup response
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=shipping-label-${orderId}.pdf`
+    );
+    doc.pipe(res);
+
+    // Add basic shipping label content
+    doc.fontSize(20).text("Shipping Label", { align: "center" });
+    doc.moveDown();
+
+    doc.fontSize(12).text(`Order ID: ${order._id}`);
+    doc.text(`Customer: ${order.userId?.name}`);
+    doc.text(`Phone: ${order.delivery_address?.mobile}`);
+    doc.moveDown();
+
+    doc.text("Shipping Address:", { underline: true });
+    doc.text(
+      `${order.delivery_address?.address_line1}, ${order.delivery_address?.city}, ${order.delivery_address?.state}, ${order.delivery_address?.country} - ${order.delivery_address?.pincode}`
+    );
+
+    doc.moveDown();
+    doc.text(`Total Amount: $${order.totalAmt}`);
+
+    // Optional: add barcode/QR code
+    if (order.qrCode && order.qrCode.startsWith("data:image")) {
+      const base64 = order.qrCode.replace(/^data:image\/png;base64,/, "");
+      const qrBuffer = Buffer.from(base64, "base64");
+      doc.image(qrBuffer, { fit: [100, 100], align: "center" });
+    }
+
+    // Finalize PDF
+    doc.end();
+  } catch (err) {
+    console.error("Shipping label generation error:", err);
+    res.status(500).json({ message: "Error generating shipping label" });
   }
 };

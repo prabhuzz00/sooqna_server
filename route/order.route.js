@@ -18,6 +18,8 @@ import {
   getTotalOrdersCountVendorController,
   totalSalesVendorController,
   downloadInvoiceController,
+  downloadShippingLabelController,
+  getRecivedOrderController,
 } from "../controllers/order.controller.js";
 
 const orderRouter = Router();
@@ -46,7 +48,13 @@ orderRouter.get("/users", auth, totalUsersController);
 orderRouter.get("/order-list/orders", auth, getUserOrderDetailsController);
 orderRouter.delete("/deleteOrder/:id", auth, deleteOrder);
 orderRouter.get("/incomplete-order-list", auth, getPendingOrderController);
+orderRouter.get("/recived-order-list", auth, getRecivedOrderController);
 orderRouter.get("/return-order-list", auth, getOrderReturnController);
 orderRouter.get("/invoice/:orderId", auth, downloadInvoiceController);
+orderRouter.get(
+  "/shipping-label/:orderId",
+  auth,
+  downloadShippingLabelController
+);
 
 export default orderRouter;
