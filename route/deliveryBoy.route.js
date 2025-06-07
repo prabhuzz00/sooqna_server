@@ -25,6 +25,6 @@ deliveryBoyRouter.delete("/:id", auth, deleteDeliveryBoy); // delete
 
 /* ---------- delivery-boy ---------- */
 deliveryBoyRouter.put("/order/:id/status", auth, updateOrderStatus);
-deliveryBoyRouter.get("/:id/orders", auth, getMyOrders);
+deliveryBoyRouter.get("/:id/orders", getMyOrders);
 
 export default deliveryBoyRouter;

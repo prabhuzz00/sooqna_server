@@ -29,4 +29,6 @@ deliveryBoySchema.methods.comparePassword = function (plain) {
   return bcrypt.compare(plain, this.password);
 };
 
-export default mongoose.model("DeliveryBoy", deliveryBoySchema);
+const DeliveryBoyModel = mongoose.model("DeliveryBoy", deliveryBoySchema);
+
+export default DeliveryBoyModel;

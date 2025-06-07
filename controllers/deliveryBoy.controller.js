@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 
 /* jwt helper (same secret as other modules) */
 const sign = (id) =>
-  jwt.sign({ id, role: "deliveryBoy" }, process.env.JWT_SECRET, {
+  jwt.sign({ id, role: "deliveryBoy" }, process.env.JSON_WEB_TOKEN_SECRET_KEY, {
     expiresIn: "30d",
   });
 
@@ -44,24 +44,66 @@ export const createDeliveryBoy = async (req, res) => {
    2️⃣  DELIVERY-BOY → login
    POST  /api/deliveryboy/login
 ────────────────────────────────────────── */
+// export const loginDeliveryBoy = async (req, res) => {
+//   try {
+//     const { emailOrPhone, password } = req.body;
+//     const boy = await DeliveryBoyModel.findOne({
+//       $or: [{ email: emailOrPhone }, { phone: emailOrPhone }],
+//     }).select("+password");
+
+//     console.log("Login attempt:", emailOrPhone);
+//     if (!boy || !(await boy.comparePassword(password)))
+//       return res
+//         .status(401)
+//         .json({ error: true, message: "Invalid credentials" });
+
+//     res.status(200).json({
+//       success: true,
+//       token: sign(boy._id),
+//       data: { id: boy._id, name: boy.name, email: boy.email },
+//     });
+//   } catch (e) {
+//     res.status(500).json({ error: true, message: e.message || e });
+//   }
+// };
 export const loginDeliveryBoy = async (req, res) => {
   try {
     const { emailOrPhone, password } = req.body;
+    console.log("Login attempt:", emailOrPhone);
+
     const boy = await DeliveryBoyModel.findOne({
       $or: [{ email: emailOrPhone }, { phone: emailOrPhone }],
     }).select("+password");
 
-    if (!boy || !(await boy.comparePassword(password)))
+    if (!boy) {
+      console.log("No delivery boy found");
+      return res
+        .status(400)
+        .json({ error: true, message: "No account with this email or phone." });
+    }
+
+    const isMatch = await boy.comparePassword(password);
+    console.log("Password match:", isMatch);
+
+    if (!isMatch)
       return res
         .status(401)
-        .json({ error: true, message: "Invalid credentials" });
+        .json({ error: true, message: "Incorrect password." });
 
+    if (!boy.isActive)
+      return res.status(403).json({
+        error: true,
+        message: "Account inactive. Please contact admin.",
+      });
+
+    const token = sign(boy._id);
     res.status(200).json({
       success: true,
-      token: sign(boy._id),
-      data: { id: boy._id, name: boy.name, email: boy.email },
+      token,
+      data: { id: boy._id, name: boy.name, email: boy.email, phone: boy.phone },
     });
   } catch (e) {
+    console.error("Login error:", e);
     res.status(500).json({ error: true, message: e.message || e });
   }
 };
@@ -134,14 +176,29 @@ export const updateOrderStatus = async (req, res) => {
    5️⃣  DELIVERY-BOY → stats / list
    GET   /api/deliveryboy/:id/orders?status=Delivered
 ────────────────────────────────────────── */
+// export const getMyOrders = async (req, res) => {
+//   try {
+//     const { id } = req.params; // delivery-boy id
+//     const { status } = req.query; // optional filter
+
+//     /* admins can fetch anyone; delivery-boy only himself */
+//     if (req.user.role === "deliveryBoy" && req.user.id !== id)
+//       return res.status(403).json({ error: true, message: "Forbidden" });
+
+//     const filter = { deliveryBoyId: id };
+//     if (status) filter.deliveryStatus = status;
+
+//     const orders = await OrderModel.find(filter);
+
+//     res.status(200).json({ success: true, count: orders.length, data: orders });
+//   } catch (e) {
+//     res.status(500).json({ error: true, message: e.message || e });
+//   }
+// };
 export const getMyOrders = async (req, res) => {
   try {
-    const { id } = req.params; // delivery-boy id
-    const { status } = req.query; // optional filter
-
-    /* admins can fetch anyone; delivery-boy only himself */
-    if (req.user.role === "deliveryBoy" && req.user.id !== id)
-      return res.status(403).json({ error: true, message: "Forbidden" });
+    const { id } = req.params; // deliveryBoyId in URL
+    const { status } = req.query;
 
     const filter = { deliveryBoyId: id };
     if (status) filter.deliveryStatus = status;
