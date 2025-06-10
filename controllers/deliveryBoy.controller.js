@@ -9,10 +9,6 @@ const sign = (id) =>
     expiresIn: "30d",
   });
 
-/* ──────────────────────────────────────────
-   1️⃣  ADMIN → create delivery-boy account
-   POST  /api/deliveryboy
-────────────────────────────────────────── */
 export const createDeliveryBoy = async (req, res) => {
   try {
     const { name, email, phone, password, gender, address } = req.body;
@@ -40,32 +36,6 @@ export const createDeliveryBoy = async (req, res) => {
   }
 };
 
-/* ──────────────────────────────────────────
-   2️⃣  DELIVERY-BOY → login
-   POST  /api/deliveryboy/login
-────────────────────────────────────────── */
-// export const loginDeliveryBoy = async (req, res) => {
-//   try {
-//     const { emailOrPhone, password } = req.body;
-//     const boy = await DeliveryBoyModel.findOne({
-//       $or: [{ email: emailOrPhone }, { phone: emailOrPhone }],
-//     }).select("+password");
-
-//     console.log("Login attempt:", emailOrPhone);
-//     if (!boy || !(await boy.comparePassword(password)))
-//       return res
-//         .status(401)
-//         .json({ error: true, message: "Invalid credentials" });
-
-//     res.status(200).json({
-//       success: true,
-//       token: sign(boy._id),
-//       data: { id: boy._id, name: boy.name, email: boy.email },
-//     });
-//   } catch (e) {
-//     res.status(500).json({ error: true, message: e.message || e });
-//   }
-// };
 export const loginDeliveryBoy = async (req, res) => {
   try {
     const { emailOrPhone, password } = req.body;
@@ -108,16 +78,6 @@ export const loginDeliveryBoy = async (req, res) => {
   }
 };
 
-/* ──────────────────────────────────────────
-   3️⃣  ADMIN → assign pending orders
-   PUT   /api/deliveryboy/assign
-   body: { deliveryBoyId, orderIds: [] }
-────────────────────────────────────────── */
-/* ──────────────────────────────────────────
-   3️⃣  ADMIN → assign pending orders
-   PUT   /api/deliveryboy/assign
-   body: { deliveryBoyId, orderIds: [] }
-────────────────────────────────────────── */
 export const assignPendingOrders = async (req, res) => {
   try {
     const { deliveryBoyId, orderIds = [] } = req.body;
@@ -138,16 +98,11 @@ export const assignPendingOrders = async (req, res) => {
   }
 };
 
-/* ──────────────────────────────────────────
-   4️⃣  DELIVERY-BOY → change order status
-   PUT   /api/deliveryboy/order/:id/status
-   body: { status: "Picked" | "Delivered" | "Returned" }
-────────────────────────────────────────── */
 export const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params; // order id
     const { status } = req.body; // new status
-    const allowed = ["Picked", "Delivered", "Returned"];
+    const allowed = ["Picked", "Out for Delivery", "Delivered", "Returned"];
 
     if (!allowed.includes(status))
       return res.status(400).json({ error: true, message: "Invalid status" });
@@ -163,7 +118,10 @@ export const updateOrderStatus = async (req, res) => {
         message: "Order not found or not assigned to you",
       });
 
-    order.deliveryStatus = status;
+    // map “Out for Delivery” → “Assigned” in deliveryStatus
+    order.order_status = status;
+    order.deliveryStatus = status === "Out for Delivery" ? "Assigned" : status;
+
     await order.save();
 
     res.status(200).json({ success: true, data: order });
@@ -172,18 +130,10 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
-/* ──────────────────────────────────────────
-   5️⃣  DELIVERY-BOY → stats / list
-   GET   /api/deliveryboy/:id/orders?status=Delivered
-────────────────────────────────────────── */
 // export const getMyOrders = async (req, res) => {
 //   try {
-//     const { id } = req.params; // delivery-boy id
-//     const { status } = req.query; // optional filter
-
-//     /* admins can fetch anyone; delivery-boy only himself */
-//     if (req.user.role === "deliveryBoy" && req.user.id !== id)
-//       return res.status(403).json({ error: true, message: "Forbidden" });
+//     const { id } = req.params; // deliveryBoyId in URL
+//     const { status } = req.query;
 
 //     const filter = { deliveryBoyId: id };
 //     if (status) filter.deliveryStatus = status;
@@ -195,15 +145,70 @@ export const updateOrderStatus = async (req, res) => {
 //     res.status(500).json({ error: true, message: e.message || e });
 //   }
 // };
+
+// export const getMyOrders = async (req, res) => {
+//   try {
+//     const { id } = req.params; // delivery-boy id
+//     const { status } = req.query; // optional filter
+
+//     /* delivery boy can fetch only his own orders */
+//     if (req.user.role === "deliveryBoy" && req.user.id !== id)
+//       return res.status(403).json({ error: true, message: "Forbidden" });
+
+//     const filter = { deliveryBoyId: id };
+//     if (status) filter.deliveryStatus = status; // keep one canonical status
+
+//     const orders = await OrderModel.find(filter)
+//       .populate({
+//         // <–– ① user
+//         path: "userId",
+//         select: "name phone", // (phone is optional – adjust to your schema)
+//       })
+//       .populate({
+//         // <–– ② delivery address
+//         path: "delivery_address",
+//         select: "mobile address_line1 city pincode", // adjust to your address schema
+//       })
+//       .select(
+//         // keep the payload light
+//         "userId delivery_address deliveryStatus totalAmt"
+//       )
+//       .lean(); // plain JS objects, cheaper to send
+
+//     res.status(200).json({
+//       success: true,
+//       count: orders.length,
+//       data: orders,
+//     });
+//   } catch (e) {
+//     res.status(500).json({ error: true, message: e.message || e });
+//   }
+// };
+
+// controllers/deliveryBoy.controller.js
 export const getMyOrders = async (req, res) => {
   try {
-    const { id } = req.params; // deliveryBoyId in URL
+    const { id } = req.params; // delivery-boy id
     const { status } = req.query;
 
     const filter = { deliveryBoyId: id };
-    if (status) filter.deliveryStatus = status;
+    if (status) filter.deliveryStatus = status; // keep ONE status field
 
-    const orders = await OrderModel.find(filter);
+    const orders = await OrderModel.find(filter)
+      /* --- add these two populates --- */
+      .populate({
+        // ① user doc
+        path: "userId",
+        select: "name phone", // adjust if the User schema differs
+      })
+      .populate({
+        // ② address doc
+        path: "delivery_address",
+        select: "mobile address_line1 city", // adapt to your Address model
+      })
+      /* send only what the front-end needs */
+      .select("userId delivery_address deliveryStatus order_status totalAmt")
+      .lean(); // plain JS objects = smaller payload
 
     res.status(200).json({ success: true, count: orders.length, data: orders });
   } catch (e) {
@@ -211,10 +216,6 @@ export const getMyOrders = async (req, res) => {
   }
 };
 
-/* ──────────────────────────────────────────
-   ADMIN → list all delivery boys
-   GET /api/deliveryboy
-────────────────────────────────────────── */
 export const getAllDeliveryBoys = async (req, res) => {
   try {
     const boys = await DeliveryBoyModel.find().sort({ createdAt: -1 });
@@ -224,10 +225,6 @@ export const getAllDeliveryBoys = async (req, res) => {
   }
 };
 
-/* ──────────────────────────────────────────
-   ADMIN → update (or toggle active)
-   PUT /api/deliveryboy/:id
-────────────────────────────────────────── */
 export const updateDeliveryBoy = async (req, res) => {
   try {
     const { id } = req.params;
@@ -270,10 +267,6 @@ export const updateDeliveryBoy = async (req, res) => {
   }
 };
 
-/* ──────────────────────────────────────────
-   ADMIN → delete
-   DELETE /api/deliveryboy/:id
-────────────────────────────────────────── */
 export const deleteDeliveryBoy = async (req, res) => {
   try {
     const { id } = req.params;
