@@ -75,6 +75,10 @@ const orderSchema = new mongoose.Schema(
     qrCode: {
       type: String,
     },
+    pickupPoint: {
+      type: String,
+      default: null,
+    },
     deliveryBoyId: {
       type: mongoose.Types.ObjectId,
       ref: "DeliveryBoy",

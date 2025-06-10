@@ -114,12 +114,16 @@ export const validateCoupon = async (req, res) => {
 // List all coupons (with pagination and filtering)
 export const listCoupons = async (req, res) => {
   try {
-    const { isActive, page = 1, limit = 10 } = req.query;
+    const { isActive, isAdmin, page = 1, limit = 10 } = req.query;
     const query = {};
 
     if (isActive !== undefined) {
       query.isActive = isActive === "true";
     }
+
+    // if (isAdmin !== undefined) {
+    //   query.isAdmin = isAdmin === "false";
+    // }
 
     const coupons = await CouponModels.find(query)
       .limit(parseInt(limit))

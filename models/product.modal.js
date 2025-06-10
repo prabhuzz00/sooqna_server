@@ -101,6 +101,10 @@ const productSchema = mongoose.Schema(
     isVerified: {
       type: Boolean,
     },
+    isReturn: {
+      type: Boolean,
+      default: false,
+    },
     vendorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Vendor",
@@ -121,6 +125,7 @@ const productSchema = mongoose.Schema(
             label: { type: String, required: true },
             price: { type: Number, required: true },
             countInStock: { type: Number, required: true },
+            vbarcode: { type: String },
           },
         ],
       },
