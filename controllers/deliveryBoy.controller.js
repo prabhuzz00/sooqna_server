@@ -120,7 +120,7 @@ export const updateOrderStatus = async (req, res) => {
 
     // map “Out for Delivery” → “Assigned” in deliveryStatus
     order.order_status = status;
-    order.deliveryStatus = status === "Out for Delivery" ? "Assigned" : status;
+    order.deliveryStatus = status;
 
     await order.save();
 
