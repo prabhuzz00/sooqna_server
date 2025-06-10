@@ -101,6 +101,10 @@ const productSchema = mongoose.Schema(
     isVerified: {
       type: Boolean,
     },
+    rejectReson: {
+      type: String,
+      default: "",
+    },
     isReturn: {
       type: Boolean,
       default: false,
