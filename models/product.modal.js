@@ -105,6 +105,9 @@ const productSchema = mongoose.Schema(
       type: String,
       default: "",
     },
+    verifyStatus: {
+      type: String,
+    },
     isReturn: {
       type: Boolean,
       default: false,
