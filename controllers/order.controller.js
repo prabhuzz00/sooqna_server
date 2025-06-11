@@ -104,11 +104,105 @@ export const createOrderController = async (request, response) => {
   }
 };
 
+
+// create order return controller 
+export const createOrderReturnController = async (request, response) => {
+  try {
+    let qrCodeImg = await QRCode.toDataURL(request.body.barcode);
+    let order = new OrderModel({
+      userId: request.body.userId,
+      products: request.body.products,
+      paymentId: request.body.paymentId,
+      payment_status: request.body.payment_status,
+      delivery_address: request.body.delivery_address,
+      totalAmt: request.body.totalAmt,
+      couponCode: request.body.couponCode,
+      couponDiscount: request.body.couponDiscount,
+      barcode: request.body.barcode,
+      qrCode: qrCodeImg,
+      date: request.body.date,
+      orderType : "Return",
+    });
+
+    console.log("products: ", request.body.products);
+
+    if (!order) {
+      response.status(500).json({
+        error: true,
+        success: false,
+      });
+    }
+
+    order = await order.save();
+
+    for (let i = 0; i < request.body.products.length; i++) {
+      const productData = request.body.products[i];
+
+      const product = await ProductModel.findOne({
+        _id: productData.productId,
+      });
+
+      if (!product) continue;
+
+      // Update main product countInStock and sale
+      await ProductModel.findByIdAndUpdate(productData.productId, {
+        countInStock: parseInt(product.countInStock - productData.quantity),
+        sale: parseInt((product?.sale || 0) + productData.quantity),
+      });
+
+      // Update variation stock using MongoDB arrayFilters
+      await ProductModel.updateOne(
+        {
+          _id: productData.productId,
+          "variation.color.label": productData.selectedColor,
+        },
+        {
+          $inc: {
+            "variation.$[variant].sizes.$[size].countInStock":
+              -productData.quantity,
+          },
+        },
+        {
+          arrayFilters: [
+            { "variant.color.label": productData.selectedColor },
+            { "size.label": productData.size },
+          ],
+        }
+      );
+    }
+
+    const user = await UserModel.findOne({ _id: request.body.userId });
+
+    const recipients = [];
+    recipients.push(user?.email);
+
+    // Send verification email
+    // await sendEmailFun({
+    //   sendTo: recipients,
+    //   subject: "Order Confirmation",
+    //   text: "",
+    //   html: OrderConfirmationEmail(user?.name, order),
+    // });
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      message: "Order Placed",
+      order: order,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+};
+
 //get order detail
 export async function getOrderDetailsController(request, response) {
   try {
-    const userId = request.userId; // order id
-
+    const userId = request.userId; 
     const { page, limit } = request.query;
 
     const orderlist = await OrderModel.find()
@@ -305,9 +399,11 @@ export async function getUserOrderDetailsController(request, response) {
   try {
     const userId = request.userId; // order id
 
-    const { page, limit } = request.query;
+    const { page, limit, orderType } = request.query;
 
-    const orderlist = await OrderModel.find({ userId: userId })
+    console.log("orderType: ", orderType)
+
+    const orderlist = await OrderModel.find({ userId: userId, orderType: orderType })
       .sort({ createdAt: -1 })
       .populate("delivery_address userId")
       .skip((page - 1) * limit)

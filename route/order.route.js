@@ -21,12 +21,14 @@ import {
   downloadShippingLabelController,
   getRecivedOrderController,
   getOrderById,
+  createOrderReturnController
 } from "../controllers/order.controller.js";
 import deliveryAuth from "../middlewares/deliveryAuth.js";
 
 const orderRouter = Router();
 
 orderRouter.post("/create", auth, createOrderController);
+orderRouter.post("/create-return", auth, createOrderReturnController)
 orderRouter.get("/order-list", auth, getOrderDetailsController);
 orderRouter.get(
   "/vendor-order-list",

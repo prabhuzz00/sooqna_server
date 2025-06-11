@@ -92,6 +92,11 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "Picked",
     },
+    orderType : {
+      type : String,
+      enum : ["Normal", "Return"],
+      default : "Normal"
+    }
   },
   {
     timestamps: true,
