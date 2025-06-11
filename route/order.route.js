@@ -20,7 +20,9 @@ import {
   downloadInvoiceController,
   downloadShippingLabelController,
   getRecivedOrderController,
+  getOrderById,
 } from "../controllers/order.controller.js";
+import deliveryAuth from "../middlewares/deliveryAuth.js";
 
 const orderRouter = Router();
 
@@ -56,5 +58,7 @@ orderRouter.get(
   auth,
   downloadShippingLabelController
 );
+
+orderRouter.get("/:id", deliveryAuth, getOrderById);
 
 export default orderRouter;

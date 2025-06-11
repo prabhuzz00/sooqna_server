@@ -43,6 +43,8 @@ import {
   verifyProduct,
   searchByImage,
   uploadColorImages,
+  rejectProduct,
+  getAllProductsForVendorIdrej,
 } from "../controllers/product.controller.js";
 
 import { removeImageFromCloudinary } from "../controllers/category.controller.js";
@@ -76,9 +78,15 @@ productRouter.post(
   uploadBannerImages
 );
 productRouter.get("/getAllVendorUnverifyProducts", getAllUnverifyProducts);
+productRouter.patch("/reject/:id", rejectProduct);
+
 productRouter.post("/create", auth, createProduct);
 productRouter.get("/getAllProducts", getAllProducts);
 productRouter.get("/getAllProductsForVendorId", getAllProductsForVendorId);
+productRouter.get(
+  "/getAllProductsForVendorIdrej",
+  getAllProductsForVendorIdrej
+);
 productRouter.get("/getAllProductsBanners", getAllProductsBanners);
 productRouter.get("/getAllProductsByCatId/:id", getAllProductsByCatId);
 productRouter.get("/getAllProductsByCatName", getAllProductsByCatName);

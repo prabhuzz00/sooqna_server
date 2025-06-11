@@ -90,8 +90,7 @@ const orderSchema = new mongoose.Schema(
     },
     deliveryStatus: {
       type: String,
-      enum: ["Pending", "Assigned", "Picked", "Delivered", "Returned"],
-      default: "Pending",
+      default: "Picked",
     },
   },
   {

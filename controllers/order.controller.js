@@ -1311,3 +1311,27 @@ export const downloadShippingLabelController = async (req, res) => {
     res.status(500).json({ message: "Error generating shipping label" });
   }
 };
+
+export const getOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Only allow delivery boy to view their assigned order
+    const order = await OrderModel.findOne({
+      _id: id,
+      deliveryBoyId: req.user.id, // Only assigned to this delivery boy
+    }).select("barcode"); // Only return barcode field
+
+    if (!order) {
+      return res.status(404).json({
+        error: true,
+        message: "Order not found or not assigned to you",
+      });
+    }
+
+    res.status(200).json({ success: true, data: order });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: true, message: e.message || e });
+  }
+};

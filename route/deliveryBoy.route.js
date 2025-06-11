@@ -10,6 +10,7 @@ import {
   updateDeliveryBoy,
   getAllDeliveryBoys,
 } from "../controllers/deliveryBoy.controller.js";
+import deliveryAuth from "../middlewares/deliveryAuth.js";
 
 const deliveryBoyRouter = Router();
 
@@ -24,7 +25,7 @@ deliveryBoyRouter.put("/:id", auth, updateDeliveryBoy); // edit / toggle
 deliveryBoyRouter.delete("/:id", auth, deleteDeliveryBoy); // delete
 
 /* ---------- delivery-boy ---------- */
-deliveryBoyRouter.put("/order/:id/status", auth, updateOrderStatus);
+deliveryBoyRouter.put("/order/:id/status", deliveryAuth, updateOrderStatus);
 deliveryBoyRouter.get("/:id/orders", getMyOrders);
 
 export default deliveryBoyRouter;

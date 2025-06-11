@@ -429,12 +429,76 @@ export const verifyProduct = async (req, res) => {
   }
 };
 
+export const rejectProduct = async (req, res) => {
+  const { id } = req.params; // product id from URL
+  const { reason } = req.body; // reason from body
+
+  if (!reason || reason.trim() === "") {
+    return res
+      .status(400)
+      .json({ error: true, message: "Rejection reason is required." });
+  }
+
+  try {
+    const product = await ProductModel.findByIdAndUpdate(
+      id,
+      { verifyStatus: "rejected", rejectReson: reason },
+      { new: true }
+    );
+    if (!product) {
+      return res
+        .status(404)
+        .json({ error: true, message: "Product not found." });
+    }
+    return res.json({
+      error: false,
+      message: "Product rejected successfully.",
+    });
+  } catch (error) {
+    console.error("Reject product error:", error);
+    return res.status(500).json({ error: true, message: "Server error." });
+  }
+};
+
 export async function getAllUnverifyProducts(request, response) {
   try {
     const page = parseInt(request.query.page) || 1;
     const limit = parseInt(request.query.limit) || 10;
 
-    const query = { isVerified: false };
+    const query = { isVerified: false, verifyStatus: "underReview" };
+
+    const [products, total] = await Promise.all([
+      ProductModel.find(query)
+        .populate("vendorId", "storeName ownerName") // Only return storeName and ownerName
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      ProductModel.countDocuments(query),
+    ]);
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      products,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || "Something went wrong",
+      error: true,
+      success: false,
+    });
+  }
+}
+
+export async function getAllRejectedProducts(request, response) {
+  try {
+    const page = parseInt(request.query.page) || 1;
+    const limit = parseInt(request.query.limit) || 10;
+
+    const query = { isVerified: false, verifyStatus: "rejected" };
 
     const [products, total] = await Promise.all([
       ProductModel.find(query)
@@ -498,6 +562,66 @@ export async function getAllProductsForVendorId(request, response) {
         error: true,
         success: false,
         message: "No products found for this vendorId",
+      });
+    }
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      products: products,
+      total: total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+      totalCount: totalProducts.length,
+      totalProducts: totalProducts,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || "An error occurred",
+      error: true,
+      success: false,
+    });
+  }
+}
+
+// get all products for given vendorId
+export async function getAllProductsForVendorIdrej(request, response) {
+  try {
+    const { vendorId, page = 1, limit = 10 } = request.query;
+
+    // Validate vendorId
+    if (!vendorId) {
+      return response.status(400).json({
+        error: true,
+        success: false,
+        message: "vendorId is required",
+      });
+    }
+
+    // Add verifyStatus: "rejected" to the query
+    const query = {
+      vendorId: { $eq: vendorId, $ne: null },
+      verifyStatus: "rejected",
+    };
+
+    // Find total products for the given vendorId and rejected status
+    const totalProducts = await ProductModel.find(query);
+
+    // Find products with pagination
+    const products = await ProductModel.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .populate("category");
+
+    // Count total documents
+    const total = await ProductModel.countDocuments(query);
+
+    if (!products || products.length === 0) {
+      return response.status(404).json({
+        error: true,
+        success: false,
+        message: "No rejected products found for this vendorId",
       });
     }
 
@@ -1261,6 +1385,7 @@ export async function updateProduct(request, response) {
         size: request.body.size,
         productWeight: request.body.productWeight,
         isVerified: request.body.isVerified,
+        verifyStatus: request.body.verifyStatus,
         vendorId: request.body.vendorId,
         barcode: request.body.barcode,
         variation: request.body.variation,
