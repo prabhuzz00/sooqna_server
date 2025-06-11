@@ -35,6 +35,10 @@ const orderSchema = new mongoose.Schema(
         vendorId: {
           type: String,
         },
+        isReturn : {
+          type: Boolean,
+          required : false,
+        }
       },
     ],
     paymentId: {

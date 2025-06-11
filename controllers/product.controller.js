@@ -154,6 +154,7 @@ export const createProduct = async (req, res) => {
       barcode,
       variation,
       tags,
+      isReturn,
     } = req.body;
 
     const newProduct = new ProductModel({
@@ -185,6 +186,7 @@ export const createProduct = async (req, res) => {
       barcode,
       variation,
       tags,
+      isReturn,
     });
 
     await newProduct.save();
@@ -1262,6 +1264,7 @@ export async function updateProduct(request, response) {
         vendorId: request.body.vendorId,
         barcode: request.body.barcode,
         variation: request.body.variation,
+        isReturn: request.body.isReturn,
       },
       { new: true }
     );
