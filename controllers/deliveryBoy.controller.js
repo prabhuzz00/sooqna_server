@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import DeliveryBoyModel from "../models/deliveryBoy.model.js";
 import OrderModel from "../models/order.model.js";
+import Vendor from "../models/vendor.model.js";
 import bcrypt from "bcryptjs";
 
 /* jwt helper (same secret as other modules) */
@@ -98,94 +99,146 @@ export const assignPendingOrders = async (req, res) => {
   }
 };
 
+// export const updateOrderStatus = async (req, res) => {
+//   try {
+//     const { id } = req.params; // order id
+//     const { status } = req.body; // new status
+//     const allowed = ["Picked", "Out for Delivery", "Delivered", "Returned"];
+
+//     if (!allowed.includes(status))
+//       return res.status(400).json({ error: true, message: "Invalid status" });
+
+//     /* ensure the order belongs to this delivery-boy */
+//     const order = await OrderModel.findOne({
+//       _id: id,
+//       deliveryBoyId: req.user.id,
+//     });
+//     if (!order)
+//       return res.status(404).json({
+//         error: true,
+//         message: "Order not found or not assigned to you",
+//       });
+
+//     // map “Out for Delivery” → “Assigned” in deliveryStatus
+//     order.order_status = status;
+//     order.deliveryStatus = status;
+
+//     await order.save();
+
+//     res.status(200).json({ success: true, data: order });
+//   } catch (e) {
+//     res.status(500).json({ error: true, message: e.message || e });
+//   }
+// };
+
 export const updateOrderStatus = async (req, res) => {
   try {
-    const { id } = req.params; // order id
-    const { status } = req.body; // new status
-    const allowed = ["Picked", "Out for Delivery", "Delivered", "Returned"];
+    const { id } = req.params; // order ID (URL param)
+    const { status } = req.body; // new status (JSON body)
 
-    if (!allowed.includes(status))
-      return res.status(400).json({ error: true, message: "Invalid status" });
+    /* -------------------------------------------------
+       1) Validate target status
+    ------------------------------------------------- */
+    const allowed = [
+      "Picked",
+      "Out for Delivery",
+      "Delivered",
+      "Returned",
+      // Added so Steps 1-3 can run from the same endpoint:
+      "Received",
+      "Canceled",
+    ];
 
-    /* ensure the order belongs to this delivery-boy */
+    if (!allowed.includes(status)) {
+      return res
+        .status(400)
+        .json({ error: true, message: "Invalid status value" });
+    }
+
+    /* -------------------------------------------------
+       2) Make sure this delivery-boy really owns the order
+    ------------------------------------------------- */
     const order = await OrderModel.findOne({
       _id: id,
       deliveryBoyId: req.user.id,
-    });
-    if (!order)
+    }).populate("products.vendorId"); // populate to avoid N extra queries
+
+    if (!order) {
       return res.status(404).json({
         error: true,
         message: "Order not found or not assigned to you",
       });
+    }
 
-    // map “Out for Delivery” → “Assigned” in deliveryStatus
-    order.order_status = status;
-    order.deliveryStatus = status;
+    /* -------------------------------------------------
+       3) Vendor-balance bookkeeping  (Steps 1-3 from API 2)
+    ------------------------------------------------- */
+    const adjustVendorBalance = async (cb) => {
+      for (const product of order.products) {
+        const vendor = product.vendorId;
+        if (!vendor) continue;
+
+        const vendorEarning =
+          product.subTotal * ((100 - vendor.commissionRate) / 100);
+
+        await cb(vendor, vendorEarning);
+        await vendor.save();
+      }
+    };
+
+    // Step 1: “Received” → add to dueBalance
+    if (status === "Received") {
+      await adjustVendorBalance((vendor, earning) => {
+        vendor.dueBalance += earning;
+      });
+    }
+
+    // Step 2: “Delivered” → move dueBalance → availableBalance
+    if (status === "Delivered") {
+      await adjustVendorBalance((vendor, earning) => {
+        vendor.availableBalance += earning;
+        vendor.dueBalance -= earning;
+      });
+    }
+
+    // Step 3: “Canceled” → roll back dueBalance
+    if (status === "Canceled") {
+      await adjustVendorBalance((vendor, earning) => {
+        vendor.dueBalance -= earning;
+        if (vendor.dueBalance < 0) vendor.dueBalance = 0; // safeguard
+      });
+    }
+
+    /* -------------------------------------------------
+       4) Update order fields & status history
+    ------------------------------------------------- */
+    order.order_status = status; // keep API 1 behaviour
+    order.deliveryStatus = status; // still mirrors order_status
+    order.statusHistory.push({
+      status,
+      updatedAt: new Date(),
+    });
 
     await order.save();
 
-    res.status(200).json({ success: true, data: order });
+    /* -------------------------------------------------
+       5) Done
+    ------------------------------------------------- */
+    return res.status(200).json({
+      success: true,
+      error: false,
+      data: order,
+    });
   } catch (e) {
-    res.status(500).json({ error: true, message: e.message || e });
+    console.error("Error updating order status:", e);
+    return res.status(500).json({
+      success: false,
+      error: true,
+      message: e.message || e,
+    });
   }
 };
 
-// export const getMyOrders = async (req, res) => {
-//   try {
-//     const { id } = req.params; // deliveryBoyId in URL
-//     const { status } = req.query;
-
-//     const filter = { deliveryBoyId: id };
-//     if (status) filter.deliveryStatus = status;
-
-//     const orders = await OrderModel.find(filter);
-
-//     res.status(200).json({ success: true, count: orders.length, data: orders });
-//   } catch (e) {
-//     res.status(500).json({ error: true, message: e.message || e });
-//   }
-// };
-
-// export const getMyOrders = async (req, res) => {
-//   try {
-//     const { id } = req.params; // delivery-boy id
-//     const { status } = req.query; // optional filter
-
-//     /* delivery boy can fetch only his own orders */
-//     if (req.user.role === "deliveryBoy" && req.user.id !== id)
-//       return res.status(403).json({ error: true, message: "Forbidden" });
-
-//     const filter = { deliveryBoyId: id };
-//     if (status) filter.deliveryStatus = status; // keep one canonical status
-
-//     const orders = await OrderModel.find(filter)
-//       .populate({
-//         // <–– ① user
-//         path: "userId",
-//         select: "name phone", // (phone is optional – adjust to your schema)
-//       })
-//       .populate({
-//         // <–– ② delivery address
-//         path: "delivery_address",
-//         select: "mobile address_line1 city pincode", // adjust to your address schema
-//       })
-//       .select(
-//         // keep the payload light
-//         "userId delivery_address deliveryStatus totalAmt"
-//       )
-//       .lean(); // plain JS objects, cheaper to send
-
-//     res.status(200).json({
-//       success: true,
-//       count: orders.length,
-//       data: orders,
-//     });
-//   } catch (e) {
-//     res.status(500).json({ error: true, message: e.message || e });
-//   }
-// };
-
-// controllers/deliveryBoy.controller.js
 export const getMyOrders = async (req, res) => {
   try {
     const { id } = req.params; // delivery-boy id
