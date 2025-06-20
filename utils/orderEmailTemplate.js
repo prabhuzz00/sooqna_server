@@ -1,5 +1,5 @@
 const OrderConfirmationEmail = (username, orders) => {
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head>
     <title>Order Confirmation</title>
@@ -68,17 +68,17 @@ const OrderConfirmationEmail = (username, orders) => {
     
             
            ${orders?.products.map(
-        (product) => `
+             (product) => `
              <tr>
         <td>${product?.productTitle}</td>
                 <td>${product?.quantity}</td>
                         <td>${product?.subTotal?.toLocaleString("en-US", {
-            style: "currency",
-            currency: "INR",
-        })}</td>
+                          style: "currency",
+                          currency: "USD",
+                        })}</td>
         </tr>
                     `
-    )}
+           )}
 
     
                     <tr>
@@ -86,17 +86,17 @@ const OrderConfirmationEmail = (username, orders) => {
                         <td colspan={2}>Total</td>
                         <td colspan={1}>
                             ${(orders?.products?.length !== 0
-            ? orders?.products
-                ?.map(
-                    (item) =>
-                        parseInt(item.subTotal) * item.quantity
-                )
-                .reduce((total, value) => total + value, 0)
-            : 0
-        )?.toLocaleString("en-US", {
-            style: "currency",
-            currency: "INR",
-        })}
+                              ? orders?.products
+                                  ?.map(
+                                    (item) =>
+                                      parseInt(item.subTotal) * item.quantity
+                                  )
+                                  .reduce((total, value) => total + value, 0)
+                              : 0
+                            )?.toLocaleString("en-US", {
+                              style: "currency",
+                              currency: "USD",
+                            })}
                         </td>
                     </tr>    
           

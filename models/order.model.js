@@ -35,10 +35,10 @@ const orderSchema = new mongoose.Schema(
         vendorId: {
           type: String,
         },
-        isReturn : {
+        isReturn: {
           type: Boolean,
-          required : false,
-        }
+          required: false,
+        },
       },
     ],
     paymentId: {
@@ -90,13 +90,13 @@ const orderSchema = new mongoose.Schema(
     },
     deliveryStatus: {
       type: String,
-      default: "Picked",
+      default: null,
     },
-    orderType : {
-      type : String,
-      enum : ["Normal", "Return"],
-      default : "Normal"
-    }
+    orderType: {
+      type: String,
+      enum: ["Normal", "Return"],
+      default: "Normal",
+    },
   },
   {
     timestamps: true,

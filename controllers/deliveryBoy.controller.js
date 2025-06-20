@@ -144,7 +144,6 @@ export const updateOrderStatus = async (req, res) => {
       "Out for Delivery",
       "Delivered",
       "Returned",
-      // Added so Steps 1-3 can run from the same endpoint:
       "Received",
       "Canceled",
     ];
@@ -170,43 +169,20 @@ export const updateOrderStatus = async (req, res) => {
       });
     }
 
-    /* -------------------------------------------------
-       3) Vendor-balance bookkeeping  (Steps 1-3 from API 2)
-    ------------------------------------------------- */
-    const adjustVendorBalance = async (cb) => {
-      for (const product of order.products) {
-        const vendor = product.vendorId;
-        if (!vendor) continue;
-
-        const vendorEarning =
-          product.subTotal * ((100 - vendor.commissionRate) / 100);
-
-        await cb(vendor, vendorEarning);
-        await vendor.save();
-      }
-    };
-
-    // Step 1: “Received” → add to dueBalance
-    if (status === "Received") {
-      await adjustVendorBalance((vendor, earning) => {
-        vendor.dueBalance += earning;
-      });
-    }
-
-    // Step 2: “Delivered” → move dueBalance → availableBalance
     if (status === "Delivered") {
-      await adjustVendorBalance((vendor, earning) => {
-        vendor.availableBalance += earning;
-        vendor.dueBalance -= earning;
-      });
-    }
+      for (const product of order.products) {
+        if (product.vendorId) {
+          const vendor = await Vendor.findById(product.vendorId);
+          if (vendor) {
+            const vendorEarning =
+              product.subTotal * ((100 - vendor.commissionRate) / 100);
 
-    // Step 3: “Canceled” → roll back dueBalance
-    if (status === "Canceled") {
-      await adjustVendorBalance((vendor, earning) => {
-        vendor.dueBalance -= earning;
-        if (vendor.dueBalance < 0) vendor.dueBalance = 0; // safeguard
-      });
+            vendor.availableBalance += vendorEarning;
+            vendor.dueBalance -= vendorEarning;
+            await vendor.save();
+          }
+        }
+      }
     }
 
     /* -------------------------------------------------
