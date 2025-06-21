@@ -99,6 +99,54 @@ export const assignPendingOrders = async (req, res) => {
   }
 };
 
+export const completeDelivery = async (req, res) => {
+  try {
+    const { id } = req.params; // order ID
+    const { signature, deliveryBoyName } = req.body;
+
+    /* 1 — make sure this driver really owns the order */
+    const order = await OrderModel.findOne({
+      _id: id,
+      deliveryBoyId: req.user.id,
+    }).populate("products.vendorId");
+
+    if (!order)
+      return res.status(404).json({
+        error: true,
+        message: "Order not found or not assigned to you",
+      });
+
+    /* 2 — credit vendors (same logic as updateOrderStatus) */
+    for (const product of order.products) {
+      if (product.vendorId) {
+        const vendor = await Vendor.findById(product.vendorId);
+        if (vendor) {
+          const vendorEarning =
+            product.subTotal * ((100 - vendor.commissionRate) / 100);
+
+          vendor.availableBalance += vendorEarning;
+          vendor.dueBalance -= vendorEarning;
+          await vendor.save();
+        }
+      }
+    }
+
+    /* 3 — atomic update */
+    order.order_status = "Delivered";
+    order.deliveryStatus = "Delivered";
+    order.deliveredBy = { id: req.user.id, name: deliveryBoyName };
+    order.deliverySignature = signature;
+    order.statusHistory.push({ status: "Delivered", updatedAt: new Date() });
+
+    await order.save();
+
+    res.json({ success: true, data: order });
+  } catch (e) {
+    console.error("completeDelivery error:", e);
+    res.status(500).json({ error: true, message: e.message || e });
+  }
+};
+
 // export const updateOrderStatus = async (req, res) => {
 //   try {
 //     const { id } = req.params; // order id

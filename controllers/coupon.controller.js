@@ -121,9 +121,9 @@ export const listCoupons = async (req, res) => {
       query.isActive = isActive === "true";
     }
 
-    // if (isAdmin !== undefined) {
-    //   query.isAdmin = isAdmin === "false";
-    // }
+    if (isAdmin !== undefined) {
+      query.isAdmin = isAdmin === "true" ? true : false;
+    }
 
     const coupons = await CouponModels.find(query)
       .limit(parseInt(limit))

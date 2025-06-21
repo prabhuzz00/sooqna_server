@@ -21,14 +21,15 @@ import {
   downloadShippingLabelController,
   getRecivedOrderController,
   getOrderById,
-  createOrderReturnController
+  createOrderReturnController,
+  getDeliveredOrders,
 } from "../controllers/order.controller.js";
 import deliveryAuth from "../middlewares/deliveryAuth.js";
 
 const orderRouter = Router();
 
 orderRouter.post("/create", auth, createOrderController);
-orderRouter.post("/create-return", auth, createOrderReturnController)
+orderRouter.post("/create-return", auth, createOrderReturnController);
 orderRouter.get("/order-list", auth, getOrderDetailsController);
 orderRouter.get(
   "/vendor-order-list",
@@ -53,6 +54,7 @@ orderRouter.get("/order-list/orders", auth, getUserOrderDetailsController);
 orderRouter.delete("/deleteOrder/:id", auth, deleteOrder);
 orderRouter.get("/incomplete-order-list", auth, getPendingOrderController);
 orderRouter.get("/recived-order-list", auth, getRecivedOrderController);
+orderRouter.get("/delivered", getDeliveredOrders);
 orderRouter.get("/return-order-list", auth, getOrderReturnController);
 orderRouter.get("/invoice/:orderId", auth, downloadInvoiceController);
 orderRouter.get(

@@ -9,6 +9,7 @@ import {
   deleteDeliveryBoy,
   updateDeliveryBoy,
   getAllDeliveryBoys,
+  completeDelivery,
 } from "../controllers/deliveryBoy.controller.js";
 import deliveryAuth from "../middlewares/deliveryAuth.js";
 
@@ -26,6 +27,7 @@ deliveryBoyRouter.delete("/:id", auth, deleteDeliveryBoy); // delete
 
 /* ---------- delivery-boy ---------- */
 deliveryBoyRouter.put("/order/:id/status", deliveryAuth, updateOrderStatus);
+deliveryBoyRouter.patch("/order/:id/complete", deliveryAuth, completeDelivery);
 deliveryBoyRouter.get("/:id/orders", getMyOrders);
 
 export default deliveryBoyRouter;

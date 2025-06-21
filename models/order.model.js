@@ -39,6 +39,10 @@ const orderSchema = new mongoose.Schema(
           type: Boolean,
           required: false,
         },
+        itemReturned: {
+          type: Boolean,
+          required: false,
+        },
       },
     ],
     paymentId: {
@@ -97,6 +101,14 @@ const orderSchema = new mongoose.Schema(
       enum: ["Normal", "Return"],
       default: "Normal",
     },
+    deliveredBy: {
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "DeliveryBoy", // or "User" if you prefer
+      },
+      name: { type: String },
+    },
+    deliverySignature: { type: String },
   },
   {
     timestamps: true,

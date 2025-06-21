@@ -104,8 +104,7 @@ export const createOrderController = async (request, response) => {
   }
 };
 
-
-// create order return controller 
+// create order return controller
 export const createOrderReturnController = async (request, response) => {
   try {
     let qrCodeImg = await QRCode.toDataURL(request.body.barcode);
@@ -121,7 +120,7 @@ export const createOrderReturnController = async (request, response) => {
       barcode: request.body.barcode,
       qrCode: qrCodeImg,
       date: request.body.date,
-      orderType : "Return",
+      orderType: "Return",
     });
 
     console.log("products: ", request.body.products);
@@ -202,7 +201,7 @@ export const createOrderReturnController = async (request, response) => {
 //get order detail
 export async function getOrderDetailsController(request, response) {
   try {
-    const userId = request.userId; 
+    const userId = request.userId;
     const { page, limit } = request.query;
 
     const orderlist = await OrderModel.find()
@@ -297,6 +296,34 @@ export async function getRecivedOrderController(request, response) {
     });
   }
 }
+
+//get delivered orders
+export const getDeliveredOrders = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page || "1", 10);
+    const limit = parseInt(req.query.limit || "10", 10);
+    const skip = (page - 1) * limit;
+
+    const query = { order_status: "Delivered" };
+
+    const orders = await OrderModel.find(query)
+      .populate("userId", "name email") // keep or drop as you need
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await OrderModel.countDocuments(query);
+
+    res.json({
+      error: false,
+      data: orders,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (e) {
+    console.error("getDeliveredOrders:", e);
+    res.status(500).json({ error: true, message: e.message || e });
+  }
+};
 
 //get order return
 export async function getOrderReturnController(request, response) {
@@ -401,9 +428,12 @@ export async function getUserOrderDetailsController(request, response) {
 
     const { page, limit, orderType } = request.query;
 
-    console.log("orderType: ", orderType)
+    console.log("orderType: ", orderType);
 
-    const orderlist = await OrderModel.find({ userId: userId, orderType: orderType })
+    const orderlist = await OrderModel.find({
+      userId: userId,
+      orderType: orderType,
+    })
       .sort({ createdAt: -1 })
       .populate("delivery_address userId")
       .skip((page - 1) * limit)
