@@ -1,5 +1,5 @@
-const VerificationEmail = (username, otp ) => {
-    return `<!DOCTYPE html>
+const VerificationEmail = (username, otp) => {
+  return `<!DOCTYPE html>
   <html lang="en">
   <head>
       <meta charset="UTF-8">
@@ -58,19 +58,18 @@ const VerificationEmail = (username, otp ) => {
           </div>
           <div class="content">
   
-              <p>Thank you for registering with Ecommerce App. Please use the OTP below to verify your email address:</p>
+              <p>Thank you for registering with Soouqna App. Please use the OTP below to verify your email address:</p>
               <div class="otp">${otp}</div>
               <p>If you didn’t create an account, you can safely ignore this email.</p>
           </div>
           <div class="footer">
-              <p>&copy; 2024 Ecommerce App. All rights reserved.</p>
+              <p>&copy; 2025 Soouqna App. All rights reserved.</p>
           </div>
       </div>
   </body>
   </html>
   
     `;
-  };
+};
 
-
-  export default VerificationEmail;
+export default VerificationEmail;
