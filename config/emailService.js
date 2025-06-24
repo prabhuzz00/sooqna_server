@@ -3,15 +3,11 @@ import nodemailer from "nodemailer";
 
 // Configure the SMTP transporter
 const transporter = nodemailer.createTransport({
-  host: "smtp.office365.com", // e.g., 'smtp.gmail.com' for Gmail
-  port: 465, // or 465 for secure
+  host: "smtp.gmail.com", // e.g., 'smtp.gmail.com' for Gmail
+  port: 587, // or 465 for secure
   auth: {
     user: process.env.EMAIL, // your SMTP username
     pass: process.env.EMAIL_PASS, // your SMTP password
-  },
-  tls: {
-    // upgrade to TLS — fail fast if it can’t
-    requireTLS: true,
   },
 });
 
