@@ -11,6 +11,7 @@ import path from "path";
 import fs from "fs";
 import pdfTable from "pdfkit-table";
 import AddressModel from "../models/address.model.js";
+import PickupConfirmationEmail from "../utils/orderEmailPickup.js";
 
 export const createOrderController = async (request, response) => {
   try {
@@ -23,6 +24,7 @@ export const createOrderController = async (request, response) => {
       delivery_address: request.body.delivery_address,
       totalAmt: request.body.totalAmt,
       couponCode: request.body.couponCode,
+      pickupPoint: request.body.pickupPoint,
       couponDiscount: request.body.couponDiscount,
       barcode: request.body.barcode,
       qrCode: qrCodeImg,
@@ -82,12 +84,19 @@ export const createOrderController = async (request, response) => {
     recipients.push(user?.email);
 
     // Send verification email
-    // await sendEmailFun({
-    //   sendTo: recipients,
-    //   subject: "Order Confirmation",
-    //   text: "",
-    //   html: OrderConfirmationEmail(user?.name, order),
-    // });
+    await sendEmailFun({
+      sendTo: recipients,
+      subject: "Order Confirmation",
+      text: "",
+      html:
+        request.body.pickupPoint === "DoorStep"
+          ? OrderConfirmationEmail(user?.name, order)
+          : PickupConfirmationEmail(
+              user?.name,
+              order,
+              request.body.pickupPoint
+            ),
+    });
 
     return response.status(200).json({
       error: false,

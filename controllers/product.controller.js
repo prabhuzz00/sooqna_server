@@ -150,6 +150,7 @@ export const createProduct = async (req, res) => {
       bannerTitleName,
       isDisplayOnHomeBanner,
       isVerified,
+      verifyStatus,
       vendorId,
       barcode,
       variation,
@@ -182,6 +183,7 @@ export const createProduct = async (req, res) => {
       bannerTitleName,
       isDisplayOnHomeBanner,
       isVerified,
+      verifyStatus,
       vendorId,
       barcode,
       variation,
@@ -1150,9 +1152,9 @@ export async function getProductsCount(request, response) {
 //get all features products
 export async function getAllFeaturedProducts(request, response) {
   try {
-    const products = await ProductModel.find({
-      isFeatured: true,
-    }).populate("category");
+    const filter = { isVerified: true, isFeatured: true };
+
+    const products = await ProductModel.find(filter).populate("category");
 
     if (!products) {
       response.status(500).json({

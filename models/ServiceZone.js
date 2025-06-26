@@ -7,6 +7,7 @@ const areaSchema = new mongoose.Schema({
 const serviceZoneSchema = new mongoose.Schema({
   city: { type: String, required: true, unique: true },
   areas: [areaSchema],
+  doorStepService: { type: Boolean, default: false },
 });
 
 const ServiceZone = mongoose.model("ServiceZone", serviceZoneSchema);

@@ -1,8 +1,8 @@
-const OrderConfirmationEmail = (username, orders) => {
+const PickupConfirmationEmail = (username, orders, pickupPoint) => {
   return `<!DOCTYPE html>
 <html>
 <head>
-    <title>Order Confirmation</title>
+    <title>Pickup Confirmation</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -52,7 +52,7 @@ const OrderConfirmationEmail = (username, orders) => {
 </head>
 <body>
     <div class="email-container">
-        <div class="header">Order Confirmation</div>
+        <div class="header">Pickup Confirmation</div>
         <div class="content">
             <p>Dear <strong>${username}</strong>,</p>
             <p>Thank you for your order! Below are your order details:</p>
@@ -102,7 +102,7 @@ const OrderConfirmationEmail = (username, orders) => {
           
           </table>
             <p><strong>Order ID:</strong> #${orders?._id}</p>
-            <p><strong>Estimated Delivery:</strong> 3-5 business days</p>
+            <p><strong>Pickup location:</strong> ${pickupPoint}</p>
             
             <p>If you have any questions, feel free to contact us.</p>
         </div >
@@ -114,4 +114,4 @@ const OrderConfirmationEmail = (username, orders) => {
 </html > `;
 };
 
-export default OrderConfirmationEmail;
+export default PickupConfirmationEmail;

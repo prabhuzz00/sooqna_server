@@ -1,50 +1,29 @@
 import ServiceZone from "../models/ServiceZone.js";
 
-// Get all cities and their areas
-// export const getServiceZones = async (req, res) => {
-//   try {
-//     const zones = await ServiceZone.find();
-//     res.json(zones);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// export const getServiceZones = async (req, res) => {
-//   try {
-//     const zones = await ServiceZone.find().lean();
-
-//     // Convert to: { "City": ["area1", "area2"] }
-//     const formatted = zones.reduce((result, zone) => {
-//       result[zone.city] = zone.areas.map((area) =>
-//         typeof area === "string" ? area : area.name
-//       );
-//       return result;
-//     }, {});
-
-//     res.json({ success: true, data: formatted });
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
-
-// GET /api/service-zones
-// Add a query param ?admin=true to return full Mongoose documents
+// Get all service zones
 export const getServiceZones = async (req, res) => {
   try {
     const isAdmin = req.query.admin === "true";
-
     const zones = await ServiceZone.find().lean();
 
     if (isAdmin) {
+      // Return full data for admin, including doorStepService
       return res.status(200).json({ success: true, data: zones });
     }
 
     // frontend (checkout) format
+    // const formatted = zones.reduce((result, zone) => {
+    //   result[zone.city] = zone.areas.map((a) =>
+    //     typeof a === "string" ? a : a.name
+    //   );
+    //   return result;
+    // }, {});
+
     const formatted = zones.reduce((result, zone) => {
-      result[zone.city] = zone.areas.map((a) =>
-        typeof a === "string" ? a : a.name
-      );
+      result[zone.city] = {
+        areas: zone.areas.map((a) => (typeof a === "string" ? a : a.name)),
+        doorStepService: zone.doorStepService,
+      };
       return result;
     }, {});
 
@@ -54,11 +33,11 @@ export const getServiceZones = async (req, res) => {
   }
 };
 
-// Add a new city with areas
+// Add a new service zone
 export const createServiceZone = async (req, res) => {
   try {
-    const { city, areas } = req.body;
-    const newZone = new ServiceZone({ city, areas });
+    const { city, areas, doorStepService = false } = req.body;
+    const newZone = new ServiceZone({ city, areas, doorStepService });
     await newZone.save();
     res.status(201).json(newZone);
   } catch (error) {
@@ -66,26 +45,29 @@ export const createServiceZone = async (req, res) => {
   }
 };
 
-// Update a city's areas
+// Update an existing service zone
 export const updateServiceZone = async (req, res) => {
   try {
     const { id } = req.params;
-    const { city, areas } = req.body;
+    const { city, areas, doorStepService = false } = req.body;
+
     const updatedZone = await ServiceZone.findByIdAndUpdate(
       id,
-      { city, areas },
+      { city, areas, doorStepService },
       { new: true }
     );
+
     if (!updatedZone) {
       return res.status(404).json({ message: "Service zone not found" });
     }
+
     res.json(updatedZone);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
 
-// Delete a city
+// Delete a service zone
 export const deleteServiceZone = async (req, res) => {
   try {
     const { id } = req.params;
