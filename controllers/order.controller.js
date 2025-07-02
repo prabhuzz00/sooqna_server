@@ -341,7 +341,7 @@ export async function getOrderReturnController(request, response) {
 
     const { page, limit } = request.query;
 
-    const orderlist = await OrderModel.find({ order_status: "canceled" })
+    const orderlist = await OrderModel.find({ order_status: "returned" })
       .sort({ createdAt: -1 })
       .populate("delivery_address userId")
       .skip((page - 1) * limit)
