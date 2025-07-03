@@ -127,12 +127,12 @@ const productSchema = mongoose.Schema(
     variation: [
       {
         color: {
-          label: { type: String, required: true },
+          label: { type: String,  },
           images: [{ type: String, required: true }],
         },
         sizes: [
           {
-            label: { type: String, required: true },
+            label: { type: String,  },
             price: { type: Number, required: true },
             countInStock: { type: Number, required: true },
             vbarcode: { type: String },

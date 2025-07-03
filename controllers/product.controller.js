@@ -9,6 +9,7 @@ import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import { request } from "http";
 import sendEmailFun from "../config/sendEmail.js";
+import vendorModel from "../models/vendor.model.js";
 
 cloudinary.config({
   cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -160,6 +161,12 @@ export const createProduct = async (req, res) => {
       isReturn,
     } = req.body;
 
+    let serviceZone = "";
+    if(vendorId){
+      const res = await vendorModel.findById(vendorId).select("serviceZone");
+      serviceZone = res?.serviceZone;
+    }
+
     const newProduct = new ProductModel({
       name,
       arbName,
@@ -191,6 +198,7 @@ export const createProduct = async (req, res) => {
       variation,
       tags,
       isReturn,
+      serviceZone,
     });
 
     await newProduct.save();

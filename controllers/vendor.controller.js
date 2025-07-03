@@ -111,6 +111,7 @@ const createVendor = async (req, res) => {
       termsAgreement,
       isVerified,
       status,
+      serviceZone,
     } = req.body;
 
     // Validate password
@@ -164,6 +165,7 @@ const createVendor = async (req, res) => {
       termsAgreement: termsAgreement === "true" || termsAgreement === true,
       isVerified: isVerified === "true" || isVerified === true,
       status: status === "true" || status === true,
+      serviceZone
     });
 
     await vendor.save();
