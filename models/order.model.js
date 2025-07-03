@@ -43,6 +43,9 @@ const orderSchema = new mongoose.Schema(
           type: Boolean,
           required: false,
         },
+        barcode : {
+          type : String
+        },
       },
     ],
     paymentId: {

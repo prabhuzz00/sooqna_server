@@ -3,10 +3,12 @@ import ProductRAMSModel from "../models/productRAMS.js";
 import ProductWEIGHTModel from "../models/productWEIGHT.js";
 import ProductSIZEModel from "../models/productSIZE.js";
 import { uploadAndTag } from "../utils/cloudService.js";
+import RejectionEmail from "../utils/rejectionEmailTemplate.js";
 
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import { request } from "http";
+import sendEmailFun from "../config/sendEmail.js";
 
 cloudinary.config({
   cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -452,6 +454,13 @@ export const rejectProduct = async (req, res) => {
         .status(404)
         .json({ error: true, message: "Product not found." });
     }
+
+    await sendEmailFun({
+      sendTo: product.vendorId.emailAddress,
+      subject: "Product Rejected",
+      html: RejectionEmail(product.vendorId.ownerName, reason),
+    });
+
     return res.json({
       error: false,
       message: "Product rejected successfully.",

@@ -339,15 +339,17 @@ export async function getOrderReturnController(request, response) {
   try {
     const userId = request.userId; // order id
 
+    console.log("im her")
+
     const { page, limit } = request.query;
 
-    const orderlist = await OrderModel.find({ order_status: "returned" })
+    const orderlist = await OrderModel.find({ orderType: "Return" })
       .sort({ createdAt: -1 })
       .populate("delivery_address userId")
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
-    const total = await OrderModel.countDocuments(orderlist);
+    const total = await OrderModel.countDocuments({ orderType: "Return" });
 
     return response.json({
       message: "order list",
@@ -1212,10 +1214,10 @@ export const downloadInvoiceController = async (req, res) => {
     const doc = new PDFDocument({ margin: 50 });
 
     // === Register Font ===
-    const fontPath = path.resolve("fonts/DejaVuSans.ttf");
+    const fontPath = path.resolve("fonts/NotoSansArabic-Regular.ttf");
     if (!fs.existsSync(fontPath)) throw new Error("Font file not found");
-    doc.registerFont("Regular", fontPath);
-    doc.font("Regular");
+    doc.registerFont("Universal", fontPath);
+    doc.font("Universal");
 
     // === Setup Response ===
     res.setHeader("Content-Type", "application/pdf");
@@ -1247,7 +1249,7 @@ export const downloadInvoiceController = async (req, res) => {
     doc
       .fillOpacity(1)
       .fillColor("#000")
-      .font("Regular")
+      .font("Universal")
       .fontSize(10)
       .text("Billed by:", 60, 100)
       .text(
@@ -1267,7 +1269,7 @@ export const downloadInvoiceController = async (req, res) => {
     doc
       .fillOpacity(1)
       .fillColor("#000")
-      .font("Regular")
+      .font("Universal")
       .fontSize(10)
       .text("Billed to:", 310, 100)
       .text(
@@ -1284,7 +1286,7 @@ export const downloadInvoiceController = async (req, res) => {
     // === Product Table Header ===
     let y = doc.y + 10;
     doc
-      .font("Regular")
+      .font("Universal")
       .fontSize(10)
       .fillColor("#000")
       .text("Item", 50, y)
@@ -1326,7 +1328,7 @@ export const downloadInvoiceController = async (req, res) => {
     y += 20;
     const gstTotal = order.totalAmt * 0.09;
     doc
-      .font("Regular")
+      .font("Universal")
       .fontSize(10)
       .fillColor("#000")
       .text(
@@ -1344,7 +1346,7 @@ export const downloadInvoiceController = async (req, res) => {
     // === Bank & Payment Details ===
     y += 40;
     doc
-      .font("Regular")
+      .font("Universal")
       .fontSize(10)
       .fillColor("#000")
       .text("Bank & Payment Details", 50, y);
@@ -1405,7 +1407,14 @@ export const downloadShippingLabelController = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    const doc = new PDFDocument({ margin: 50 });
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
+
+    // Path to Noto Sans Arabic font
+    const fontPath = path.resolve("fonts/NotoSansArabic-Regular.ttf");
+
+    // Register font
+    doc.registerFont("Universal", fontPath);
+    doc.font("Universal"); // Use it globally if needed
 
     // Setup response
     res.setHeader("Content-Type", "application/pdf");
@@ -1415,31 +1424,36 @@ export const downloadShippingLabelController = async (req, res) => {
     );
     doc.pipe(res);
 
-    // Add basic shipping label content
+    // Title
     doc.fontSize(20).text("Shipping Label", { align: "center" });
     doc.moveDown();
 
+    // Basic Info
     doc.fontSize(12).text(`Order ID: ${order._id}`);
     doc.text(`Customer: ${order.userId?.name}`);
     doc.text(`Phone: ${order.delivery_address?.mobile}`);
     doc.moveDown();
 
+    // Shipping Address
     doc.text("Shipping Address:", { underline: true });
-    doc.text(
-      `${order.delivery_address?.address_line1}, ${order.delivery_address?.city}, ${order.delivery_address?.state}, ${order.delivery_address?.country} - ${order.delivery_address?.pincode}`
-    );
+
+    // Use font that supports Arabic here (in case address includes Arabic)
+    doc
+      .font("Universal")
+      .text(
+        `${order.delivery_address?.address_line1}, ${order.delivery_address?.city}, ${order.delivery_address?.state}, ${order.delivery_address?.country} - ${order.delivery_address?.pincode}`
+      );
 
     doc.moveDown();
-    doc.text(`Total Amount: $${order.totalAmt}`);
+    doc.font("Universal").text(`Total Amount: $${order.totalAmt}`);
 
-    // Optional: add barcode/QR code
+    // Optional QR Code
     if (order.qrCode && order.qrCode.startsWith("data:image")) {
       const base64 = order.qrCode.replace(/^data:image\/png;base64,/, "");
       const qrBuffer = Buffer.from(base64, "base64");
       doc.image(qrBuffer, { fit: [100, 100], align: "center" });
     }
 
-    // Finalize PDF
     doc.end();
   } catch (err) {
     console.error("Shipping label generation error:", err);
@@ -1470,3 +1484,57 @@ export const getOrderById = async (req, res) => {
     res.status(500).json({ error: true, message: e.message || e });
   }
 };
+
+export const getOrderDetail = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({
+        message: "Order ID is required",
+        error: true,
+        success: false,
+      });
+    }
+
+    const order = await OrderModel.findById(id)
+      .populate({
+        path: "userId",
+        select: "name email phone avatar",
+      })
+      .populate({
+        path: "delivery_address",
+        select: "addressLine1 addressLine2 city state pincode country mobile",
+      })
+      .populate({
+        path: "deliveryBoyId",
+        select: "name phone email",
+      })
+      .populate({
+        path: "deliveredBy.id",
+        select: "name phone email",
+      });
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+        error: true,
+        success: false,
+      });
+    }
+
+    res.status(200).json({
+      message: "Order details retrieved successfully",
+      error: false,
+      success: true,
+      order: order,
+    });
+  } catch (error) {
+    console.error("Error fetching order details:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: true,
+      success: false,
+    });
+  }
+}

@@ -24,6 +24,7 @@ const vendorSchema = new mongoose.Schema({
     },
   ],
   taxIdentificationNumber: { type: String },
+  serviceZone : { type : String},
   termsAgreement: { type: Boolean, required: true },
   isVerified: { type: Boolean, default: false },
   status: { type: Boolean, default: true },

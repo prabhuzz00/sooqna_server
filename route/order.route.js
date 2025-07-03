@@ -23,6 +23,7 @@ import {
   getOrderById,
   createOrderReturnController,
   getDeliveredOrders,
+  getOrderDetail,
 } from "../controllers/order.controller.js";
 import deliveryAuth from "../middlewares/deliveryAuth.js";
 
@@ -31,6 +32,7 @@ const orderRouter = Router();
 orderRouter.post("/create", auth, createOrderController);
 orderRouter.post("/create-return", auth, createOrderReturnController);
 orderRouter.get("/order-list", auth, getOrderDetailsController);
+orderRouter.get("/order-details/:id", getOrderDetail);
 orderRouter.get(
   "/vendor-order-list",
   vendorAuth,

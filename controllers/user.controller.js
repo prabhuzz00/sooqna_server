@@ -434,12 +434,12 @@ export async function authWithGoogle(request, response) {
 
 export async function loginUserController(request, response) {
   try {
-    const { email, phone, password } = request.body;
+    const { email, password } = request.body;
 
     // Check if either email or phone is provided
-    if (!email && !phone) {
+    if (!email) {
       return response.status(400).json({
-        message: "Please provide email or phone number for login.",
+        message: "Please provide email for login.",
         error: true,
         success: false,
       });
@@ -451,15 +451,12 @@ export async function loginUserController(request, response) {
     if (email) {
       user = await UserModel.findOne({ email: email });
       console.log("Attempting to find user by email:", email);
-    } else if (phone) {
-      user = await UserModel.findOne({ phone: phone });
-      console.log("Attempting to find user by phone:", phone);
-    }
+    } 
 
     if (!user) {
-      console.log("User not found for login:", { email, phone });
+      console.log("User not found for login:", { email });
       return response.status(400).json({
-        message: "User not registered with this email or phone number.",
+        message: "User not registered with this email.",
         error: true,
         success: false,
       });

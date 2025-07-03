@@ -117,6 +117,9 @@ const productSchema = mongoose.Schema(
       ref: "Vendor",
       default: null,
     },
+    serviceZone : {
+      type : String,
+    },
     barcode: {
       type: String,
     },
