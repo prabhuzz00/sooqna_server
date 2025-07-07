@@ -1441,7 +1441,7 @@ export const downloadShippingLabelController = async (req, res) => {
     doc
       .font("Universal")
       .text(
-        `${order.delivery_address?.address_line1}, ${order.delivery_address?.city}, ${order.delivery_address?.state}, ${order.delivery_address?.country} - ${order.delivery_address?.pincode}`
+        `City: ${order.delivery_address?.city}, Area: ${order.delivery_address?.area}, Street: ${order.delivery_address?.address_line1}, Landmark: ${order.delivery_address?.landmark}`
       );
 
     doc.moveDown();
