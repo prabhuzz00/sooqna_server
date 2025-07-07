@@ -199,16 +199,14 @@ cloudinary.config({
 
 export async function registerUserController(req, res) {
   try {
-    const { name, email, phone, password } = req.body;
-    if (!name || !email || !phone || !password) {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
       return res
         .status(400)
         .json({ message: "All fields are required", error: true });
     }
 
-    const existingUser = await UserModel.findOne({
-      $or: [{ email }, { phone }],
-    });
+    const existingUser = await UserModel.findOne({email});
     if (existingUser) {
       return res
         .status(400)
@@ -219,9 +217,9 @@ export async function registerUserController(req, res) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = Date.now() + 600000;
 
-    const existingPending = await PendingUser.findOne({
-      $or: [{ email }, { phone }],
-    });
+    const existingPending = await PendingUser.findOne(
+     { email}
+    );
 
     if (existingPending) {
       // Update OTP for existing pending user
@@ -235,7 +233,6 @@ export async function registerUserController(req, res) {
       await PendingUser.create({
         name,
         email,
-        phone,
         password: hashedPassword,
         otp,
         otpExpires,
@@ -259,8 +256,8 @@ export async function registerUserController(req, res) {
 
 export async function verifyEmailController(req, res) {
   try {
-    const { phone, otp } = req.body;
-    const pendingUser = await PendingUser.findOne({ phone });
+    const {  email, otp } = req.body;
+    const pendingUser = await PendingUser.findOne({ email });
     if (!pendingUser) {
       return res
         .status(400)
@@ -279,7 +276,6 @@ export async function verifyEmailController(req, res) {
     const newUser = new UserModel({
       name: pendingUser.name,
       email: pendingUser.email,
-      phone: pendingUser.phone,
       password: pendingUser.password,
       verify_email: true,
     });

@@ -21,8 +21,6 @@ const userSchema = mongoose.Schema(
     },
     phone: {
       type: Number,
-      required: [true, "Provide Phone Number"],
-      unique: true,
     },
     verify_email: {
       type: Boolean,
