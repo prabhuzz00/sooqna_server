@@ -339,7 +339,7 @@ export async function getOrderReturnController(request, response) {
   try {
     const userId = request.userId; // order id
 
-    console.log("im her")
+    console.log("im her");
 
     const { page, limit } = request.query;
 
@@ -1488,7 +1488,7 @@ export const getOrderById = async (req, res) => {
 export const getOrderDetail = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     if (!id) {
       return res.status(400).json({
         message: "Order ID is required",
@@ -1504,7 +1504,7 @@ export const getOrderDetail = async (req, res) => {
       })
       .populate({
         path: "delivery_address",
-        select: "addressLine1 addressLine2 city state pincode country mobile",
+        select: "address_line1 city area landmark mobile addressType",
       })
       .populate({
         path: "deliveryBoyId",
@@ -1537,4 +1537,4 @@ export const getOrderDetail = async (req, res) => {
       success: false,
     });
   }
-}
+};
