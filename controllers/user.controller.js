@@ -894,6 +894,15 @@ export async function changePasswordController(request, response) {
       });
     }
 
+    if (!validatePassword(confirmPassword)) {
+      return response.status(400).json({
+        message:
+          "Password must be at least 8 characters, include uppercase, lowercase, number, and special character.",
+        error: true,
+        success: false,
+      });
+    }
+
     const salt = await bcryptjs.genSalt(10);
     const hashPassword = await bcryptjs.hash(confirmPassword, salt);
 
