@@ -11,6 +11,7 @@ import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import ReviewModel from "../models/reviews.model.js.js";
 import WelcomeEmail from "../utils/welcomeEmailTemplate.js";
+import validatePassword from "../utils/validatePassword.js";
 
 cloudinary.config({
   cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -206,20 +207,27 @@ export async function registerUserController(req, res) {
         .json({ message: "All fields are required", error: true });
     }
 
-    const existingUser = await UserModel.findOne({email});
+    const existingUser = await UserModel.findOne({ email });
     if (existingUser) {
       return res
         .status(400)
         .json({ message: "User already registered.", error: true });
     }
 
+    if (!validatePassword(password)) {
+      return response.status(400).json({
+        message:
+          "Password must be at least 8 characters, include uppercase, lowercase, number, and special character.",
+        error: true,
+        success: false,
+      });
+    }
+
     const hashedPassword = await bcryptjs.hash(password, 10);
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = Date.now() + 600000;
 
-    const existingPending = await PendingUser.findOne(
-     { email}
-    );
+    const existingPending = await PendingUser.findOne({ email });
 
     if (existingPending) {
       // Update OTP for existing pending user
@@ -256,7 +264,7 @@ export async function registerUserController(req, res) {
 
 export async function verifyEmailController(req, res) {
   try {
-    const {  email, otp } = req.body;
+    const { email, otp } = req.body;
     const pendingUser = await PendingUser.findOne({ email });
     if (!pendingUser) {
       return res
@@ -447,7 +455,7 @@ export async function loginUserController(request, response) {
     if (email) {
       user = await UserModel.findOne({ email: email });
       console.log("Attempting to find user by email:", email);
-    } 
+    }
 
     if (!user) {
       console.log("User not found for login:", { email });
@@ -822,6 +830,15 @@ export async function resetpassword(request, response) {
     if (newPassword !== confirmPassword) {
       return response.status(400).json({
         message: "newPassword and confirmPassword must be same.",
+        error: true,
+        success: false,
+      });
+    }
+
+    if (!validatePassword(confirmPassword)) {
+      return response.status(400).json({
+        message:
+          "Password must be at least 8 characters, include uppercase, lowercase, number, and special character.",
         error: true,
         success: false,
       });

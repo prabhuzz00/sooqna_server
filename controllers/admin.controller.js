@@ -9,6 +9,7 @@ import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import ReviewModel from "../models/reviews.model.js.js";
 import AdminModel from "../models/admin.model.js";
+import validatePassword from "../utils/validatePassword.js";
 
 cloudinary.config({
   cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -42,6 +43,15 @@ export async function registerUserController(request, response) {
           : "User already Registered with this Phone Number";
       return response.json({
         message: message,
+        error: true,
+        success: false,
+      });
+    }
+
+    if (!validatePassword(password)) {
+      return response.status(400).json({
+        message:
+          "Password must be at least 8 characters, include uppercase, lowercase, number, and special character.",
         error: true,
         success: false,
       });
@@ -712,6 +722,15 @@ export async function changePasswordController(request, response) {
     if (newPassword !== confirmPassword) {
       return response.status(400).json({
         message: "newPassword and confirmPassword must be same.",
+        error: true,
+        success: false,
+      });
+    }
+
+    if (!validatePassword(confirmPassword)) {
+      return response.status(400).json({
+        message:
+          "Password must be at least 8 characters, include uppercase, lowercase, number, and special character.",
         error: true,
         success: false,
       });

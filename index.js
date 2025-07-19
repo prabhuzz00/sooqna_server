@@ -34,8 +34,29 @@ import serviceZoneRouter from "./route/serviceZone.route.js";
 import deliveryBoyRouter from "./route/deliveryBoy.route.js";
 
 const app = express();
-app.use(cors());
-app.options("*", cors());
+// app.use(cors());
+// app.options("*", cors());
+const allowedOrigins = [
+  "https://soouqna.com",
+  "https://admin.soouqna.com",
+  "https://seller.soouqna.com",
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 app.use(cookieParser());
@@ -43,8 +64,14 @@ app.use(cookieParser());
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
+    hsts: {
+      maxAge: 31536000, // 1 year in seconds
+      includeSubDomains: true,
+      preload: true,
+    },
   })
 );
+app.disable("x-powered-by"); // Also hide Express info in headers
 
 app.get("/", (request, response) => {
   ///server to client

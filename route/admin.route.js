@@ -17,11 +17,12 @@ import {
   userDetails,
   verifyEmailController,
 } from "../controllers/admin.controller.js";
+import { loginRateLimiter } from "../middlewares/rateLimiter.js";
 
 const adminRouter = Router();
 adminRouter.post("/register", registerUserController);
 adminRouter.post("/verifyEmail", verifyEmailController);
-adminRouter.post("/login", loginUserController);
+adminRouter.post("/login", loginRateLimiter, loginUserController);
 adminRouter.get("/logout", auth, logoutController);
 adminRouter.put(
   "/user-avatar",
