@@ -32,6 +32,7 @@ import shippingRouter from "./route/shipping.route.js";
 import reportRouter from "./route/report.route.js";
 import serviceZoneRouter from "./route/serviceZone.route.js";
 import deliveryBoyRouter from "./route/deliveryBoy.route.js";
+import currencyRouter from "./route/currencyExchange.js"
 
 const app = express();
 // app.use(cors());
@@ -40,6 +41,8 @@ const allowedOrigins = [
   "https://soouqna.com",
   "https://admin.soouqna.com",
   "https://seller.soouqna.com",
+  "http://localhost:5173",
+  "http://localhost:3000",
 ];
 
 const corsOptions = {
@@ -106,6 +109,7 @@ app.use("/api/shipping-cost", shippingRouter);
 app.use("/api/report", reportRouter);
 app.use("/api/service-zones", serviceZoneRouter);
 app.use("/api/deliveryboy", deliveryBoyRouter);
+app.use("/api/currency-rates", currencyRouter);
 
 connectDB().then(() => {
   app.listen(process.env.PORT, () => {
