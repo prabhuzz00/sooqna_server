@@ -32,7 +32,7 @@ import shippingRouter from "./route/shipping.route.js";
 import reportRouter from "./route/report.route.js";
 import serviceZoneRouter from "./route/serviceZone.route.js";
 import deliveryBoyRouter from "./route/deliveryBoy.route.js";
-import currencyRouter from "./route/currencyExchange.js"
+import currencyRouter from "./route/currencyExchange.js";
 
 const app = express();
 // app.use(cors());
@@ -43,7 +43,7 @@ const allowedOrigins = [
   "https://seller.soouqna.com",
   "http://localhost:5173",
   "http://localhost:3000",
-  "http://localhost:4173"
+  "http://localhost:4173",
 ];
 
 const corsOptions = {
@@ -55,7 +55,7 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   credentials: true,
 };
 

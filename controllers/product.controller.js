@@ -162,7 +162,7 @@ export const createProduct = async (req, res) => {
     } = req.body;
 
     let serviceZone = "";
-    if(vendorId){
+    if (vendorId) {
       const res = await vendorModel.findById(vendorId).select("serviceZone");
       serviceZone = res?.serviceZone;
     }
@@ -218,141 +218,6 @@ export const createProduct = async (req, res) => {
   }
 };
 
-//get all products
-// export async function getAllProducts(request, response) {
-//   try {
-//     const { page, limit } = request.query;
-//     const totalProducts = await ProductModel.find();
-
-//     const products = await ProductModel.find({ isVerified: true })
-//       .sort({ createdAt: -1 })
-//       .skip((page - 1) * limit)
-//       .limit(parseInt(limit));
-
-//     const total = await ProductModel.countDocuments(products);
-
-//     if (!products) {
-//       return response.status(400).json({
-//         error: true,
-//         success: false,
-//       });
-//     }
-
-//     return response.status(200).json({
-//       error: false,
-//       success: true,
-//       products: products,
-//       total: total,
-//       page: parseInt(page),
-//       totalPages: Math.ceil(total / limit),
-//       totalCount: totalProducts?.length,
-//       totalProducts: totalProducts,
-//     });
-//   } catch (error) {
-//     return response.status(500).json({
-//       message: error.message || error,
-//       error: true,
-//       success: false,
-//     });
-//   }
-// }
-
-// export async function getAllProducts(req, res) {
-//   try {
-//     /* ───────────────────────── defaults & parsing ───────────────────────── */
-//     let { page = 1, limit = 50 } = req.query;
-//     page = parseInt(page);
-//     limit = parseInt(limit);
-
-//     /* filter only verified products */
-//     const filter = { isVerified: true };
-
-//     /* ───────────────────── parallel queries for speed ───────────────────── */
-//     const [products, totalVerified] = await Promise.all([
-//       ProductModel.find(filter)
-//         .sort({ createdAt: -1 })
-//         .skip((page - 1) * limit)
-//         .limit(limit)
-//         /* ▼  populate just the needed vendor fields ▼ */
-//         .populate("vendorId", "storeName ownerName"),
-//       ProductModel.countDocuments(filter),
-//     ]);
-
-//     /* total products in the collection (irrespective of isVerified) */
-//     const totalProducts = await ProductModel.estimatedDocumentCount();
-
-//     /* ───────────────────────────── response ─────────────────────────────── */
-//     return res.status(200).json({
-//       error: false,
-//       success: true,
-//       products, // ⟵ now includes vendorId.storeName / ownerName
-//       total: totalVerified,
-//       page,
-//       totalPages: Math.ceil(totalVerified / limit),
-//       totalCount: totalProducts,
-//     });
-//   } catch (err) {
-//     return res.status(500).json({
-//       error: true,
-//       success: false,
-//       message: err.message || err,
-//     });
-//   }
-// }
-
-// GET /api/product/getAllProducts
-// export async function getAllProducts(req, res) {
-//   try {
-//     /* ---------- parse paging ---------- */
-//     let { page = 1, limit = 50 } = req.query;
-//     page = parseInt(page);
-//     limit = parseInt(limit);
-
-//     const filter = { isVerified: true };
-
-//     /* ---------- run queries in parallel ---------- */
-//     const [pageProducts, allProducts, totalVerified] = await Promise.all([
-//       // 1️⃣ paginated slice for the table
-//       ProductModel.find(filter)
-//         .sort({ createdAt: -1 })
-//         .skip((page - 1) * limit)
-//         .limit(limit)
-//         .populate("vendorId", "storeName ownerName"),
-
-//       // 2️⃣ **light** projection of the full list (needed for search)
-//       //    Only keep fields the UI actually searches on to save bandwidth
-//       ProductModel.find(filter)
-//         .select("name catName subCat barcode vendorId")
-//         .populate("vendorId", "storeName ownerName"),
-
-//       // 3️⃣ count of verified docs
-//       ProductModel.countDocuments(filter),
-//     ]);
-
-//     /* ---------- overall collection size ---------- */
-//     const totalCollection = await ProductModel.estimatedDocumentCount();
-
-//     /* ---------- response ---------- */
-//     return res.status(200).json({
-//       error: false,
-//       success: true,
-//       products: pageProducts, // paginated rows
-//       totalProducts: allProducts, // <-- full list for search box
-//       total: totalVerified,
-//       page,
-//       totalPages: Math.ceil(totalVerified / limit),
-//       totalCount: totalCollection,
-//       totalProducts: allProducts,
-//     });
-//   } catch (err) {
-//     res.status(500).json({
-//       error: true,
-//       success: false,
-//       message: err.message || err,
-//     });
-//   }
-// }
-
 export async function getAllProducts(req, res) {
   try {
     /* ---------- paging params ---------- */
@@ -372,15 +237,6 @@ export async function getAllProducts(req, res) {
           .skip((page - 1) * limit)
           .limit(limit)
           .populate("vendorId", "storeName ownerName"),
-
-        // 2️⃣ lightweight full list (only fields the search bar needs)
-        // ProductModel.find(filter)
-        //   .select("name catName subCat barcode vendorId")
-        // ProductModel.find(filter)
-        //   .select(
-        //     "name catName subCat barcode price oldPrice sale rating countInStock images vendorId variation.sizes.vbarcode variation.sizes.labels"
-        //   )
-        //   .populate("vendorId", "storeName ownerName"),
 
         ProductModel.find(filter)
           .sort({ createdAt: -1 })
@@ -662,54 +518,6 @@ export async function getAllProductsForVendorIdrej(request, response) {
     });
   }
 }
-
-//get all products by category id
-// export async function getAllProductsByCatId(request, response) {
-//   try {
-//     const page = parseInt(request.query.page) || 1;
-//     const perPage = parseInt(request.query.perPage) || 10000;
-
-//     const totalPosts = await ProductModel.countDocuments();
-//     const totalPages = Math.ceil(totalPosts / perPage);
-
-//     if (page > totalPages) {
-//       return response.status(404).json({
-//         message: "Page not found",
-//         success: false,
-//         error: true,
-//       });
-//     }
-
-//     const products = await ProductModel.find({
-//       catId: request.params.id,
-//     })
-//       .populate("category")
-//       .skip((page - 1) * perPage)
-//       .limit(perPage)
-//       .exec();
-
-//     if (!products) {
-//       response.status(500).json({
-//         error: true,
-//         success: false,
-//       });
-//     }
-
-//     return response.status(200).json({
-//       error: false,
-//       success: true,
-//       products: products,
-//       totalPages: totalPages,
-//       page: page,
-//     });
-//   } catch (error) {
-//     return response.status(500).json({
-//       message: error.message || error,
-//       error: true,
-//       success: false,
-//     });
-//   }
-// }
 
 export async function getAllProductsByCatId(request, response) {
   try {
