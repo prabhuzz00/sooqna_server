@@ -23,6 +23,18 @@ export const updateSiteSetting = async (req, res) => {
       linkedin,
       popularProductHeadingEn,
       popularProductHeadingAr,
+      addressLine1,
+      addressLine2,
+      addressLine3,
+      addressLine1ar,
+      addressLine2ar,
+      addressLine3ar,
+      workingHourL1,
+      workingHourL2,
+      workingHourL3,
+      workingHourL1ar,
+      workingHourL2ar,
+      workingHourL3ar,
     } = req.body;
 
     const data = {
@@ -35,6 +47,18 @@ export const updateSiteSetting = async (req, res) => {
       linkedin,
       popularProductHeadingEn,
       popularProductHeadingAr,
+      addressLine1,
+      addressLine2,
+      addressLine3,
+      addressLine1ar,
+      addressLine2ar,
+      addressLine3ar,
+      workingHourL1,
+      workingHourL2,
+      workingHourL3,
+      workingHourL1ar,
+      workingHourL2ar,
+      workingHourL3ar,
     };
 
     let siteSetting = await SiteSetting.findOne();
