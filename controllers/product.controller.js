@@ -1745,11 +1745,11 @@ const sortItems = (products, sortBy, order) => {
   return products.sort((a, b) => {
     if (sortBy === "name") {
       return order === "asc"
-        ? a.name.localeCompare(b.name)
-        : b.name.localeCompare(a.name);
+        ? b.name.localeCompare(a.name)
+        : a.name.localeCompare(b.name);
     }
     if (sortBy === "price") {
-      return order === "asc" ? a.price - b.price : b.price - a.price;
+      return order === "asc" ? b.price - a.price : a.price - b.price;
     }
     return 0; // Default
   });
