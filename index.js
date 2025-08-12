@@ -44,7 +44,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "http://localhost:4173",
-  "https://uploaded-budget-automation-voltage.trycloudflare.com"
+  "https://uploaded-budget-automation-voltage.trycloudflare.com",
 ];
 
 const corsOptions = {

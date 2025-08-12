@@ -654,18 +654,87 @@ export const updateOrderStatusController = async (request, response) => {
     }
 
     // --- Step 3: If order_status is "Canceled", remove dueBalance ---
+    // if (order_status === "Canceled") {
+    //   for (const product of order.products) {
+    //     if (product.vendorId) {
+    //       const vendor = await Vendor.findById(product.vendorId);
+    //       if (vendor) {
+    //         const vendorEarning =
+    //           product.subTotal * ((100 - vendor.commissionRate) / 100);
+
+    //         vendor.dueBalance -= vendorEarning;
+    //         if (vendor.dueBalance < 0) vendor.dueBalance = 0; // Optional safeguard
+    //         await vendor.save();
+    //       }
+    //     }
+    //   }
+    // }
+
+    // --- Step 3: If order_status is "Canceled", remove dueBalance and restore stock (only if wasn't already cancelled) ---
     if (order_status === "Canceled") {
-      for (const product of order.products) {
-        if (product.vendorId) {
-          const vendor = await Vendor.findById(product.vendorId);
+      for (const item of order.products) {
+        // vendor balance adjustment
+        if (item.vendorId) {
+          const vendor = await Vendor.findById(item.vendorId);
           if (vendor) {
             const vendorEarning =
-              product.subTotal * ((100 - vendor.commissionRate) / 100);
-
-            vendor.dueBalance -= vendorEarning;
-            if (vendor.dueBalance < 0) vendor.dueBalance = 0; // Optional safeguard
+              (item.subTotal || 0) *
+              ((100 - (vendor.commissionRate || 0)) / 100);
+            vendor.dueBalance = Math.max(
+              0,
+              (vendor.dueBalance || 0) - vendorEarning
+            );
             await vendor.save();
           }
+        }
+
+        // restore stock for the matching variant/size
+        if (item.productId) {
+          const dbProduct = await ProductModel.findById(item.productId);
+          if (!dbProduct) {
+            console.warn(`Product not found for id ${item.productId}`);
+            continue;
+          }
+
+          // find variation by color label
+          const variation = (dbProduct.variation || []).find(
+            (v) =>
+              v?.color?.label?.toString() ===
+              (item.selectedColor || "").toString()
+          );
+
+          if (!variation) {
+            console.warn(
+              `Variation color "${item.selectedColor}" not found for product ${item.productId}`
+            );
+            // continue; // you can continue or decide to try other logic
+          } else {
+            // find the size object
+            const sizeObj = (variation.sizes || []).find(
+              (s) => s?.label?.toString() === (item.size || "").toString()
+            );
+
+            if (!sizeObj) {
+              console.warn(
+                `Size "${item.size}" not found in variation "${item.selectedColor}" for product ${item.productId}`
+              );
+            } else {
+              // restore stock
+              sizeObj.countInStock =
+                (sizeObj.countInStock || 0) + (item.quantity || 0);
+            }
+          }
+
+          // recalculate total countInStock across all variations/sizes
+          let totalStock = 0;
+          (dbProduct.variation || []).forEach((v) =>
+            (v.sizes || []).forEach((s) => {
+              totalStock += Number(s.countInStock || 0);
+            })
+          );
+
+          dbProduct.countInStock = totalStock;
+          await dbProduct.save();
         }
       }
     }
