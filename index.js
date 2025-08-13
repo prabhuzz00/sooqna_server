@@ -41,6 +41,9 @@ const allowedOrigins = [
   "https://soouqna.com",
   "https://admin.soouqna.com",
   "https://seller.soouqna.com",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:4173",
   "https://delivery.soouqna.com",
 ];
 
