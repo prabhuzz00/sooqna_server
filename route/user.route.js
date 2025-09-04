@@ -21,6 +21,7 @@ import {
   verifyEmailController,
   verifyForgotPasswordOtp,
   updateUserLocation,
+  authWithFacebook,
 } from "../controllers/user.controller.js";
 import auth from "../middlewares/auth.js";
 import upload from "../middlewares/multer.js";
@@ -31,6 +32,7 @@ userRouter.post("/register", registerUserController);
 userRouter.post("/verifyEmail", verifyEmailController);
 userRouter.post("/login", loginRateLimiter, loginUserController);
 userRouter.post("/authWithGoogle", authWithGoogle);
+userRouter.post("/authWithFacebook", authWithFacebook);
 userRouter.get("/logout", auth, logoutController);
 userRouter.put(
   "/user-avatar",

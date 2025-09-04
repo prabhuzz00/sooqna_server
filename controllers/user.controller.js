@@ -20,184 +20,6 @@ cloudinary.config({
   secure: true,
 });
 
-// export async function registerUserController(request, response) {
-//   try {
-//     let user;
-//     const { name, email, phone, password } = request.body;
-//     if (!name || !email || !phone || !password) {
-//       return response.status(400).json({
-//         message: "provide name, email, phone, password",
-//         error: true,
-//         success: false,
-//       });
-//     }
-
-//     // Check if user exists by email OR phone
-//     user = await UserModel.findOne({
-//       $or: [{ email: email }, { phone: phone }],
-//     });
-
-//     if (user) {
-//       // Adjust message based on which field is duplicated
-//       const message =
-//         user.email === email
-//           ? "User already Registered with this Email"
-//           : "User already Registered with this Phone Number";
-//       return response.json({
-//         message: message,
-//         error: true,
-//         success: false,
-//       });
-//     }
-
-//     const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-//     const salt = await bcryptjs.genSalt(10);
-//     const hashPassword = await bcryptjs.hash(password, salt);
-
-//     user = new UserModel({
-//       name: name,
-//       email: email,
-//       phone: phone,
-//       password: hashPassword,
-//       otp: verifyCode,
-//       verify_email: false, // Keep email unverified initially if using OTP later
-//       otpExpires: Date.now() + 600000,
-//     });
-
-//     await user.save();
-
-//     // Send verification email
-//     await sendEmailFun({
-//       sendTo: email,
-//       subject: "Verify email from Soouqna App",
-//       text: "",
-//       html: VerificationEmail(name, verifyCode),
-//     });
-
-//     // Create a JWT token for verification purposes
-//     const token = jwt.sign(
-//       { phone: user.phone, id: user._id },
-//       process.env.JSON_WEB_TOKEN_SECRET_KEY
-//     );
-
-//     return response.status(200).json({
-//       success: true,
-//       error: false,
-//       message: "User registered successfully! Please verify your PhoneNumber.",
-//       token: token, // Optional: include this if needed for verification
-//     });
-//   } catch (error) {
-//     return response.status(500).json({
-//       message: error.message || error,
-//       error: true,
-//       success: false,
-//     });
-//   }
-// }
-
-// export async function verifyEmailController(request, response) {
-//   try {
-//     const { phone, otp } = request.body;
-
-//     const user = await UserModel.findOne({ phone: phone });
-//     if (!user) {
-//       return response
-//         .status(400)
-//         .json({ error: true, success: false, message: "User not found" });
-//     }
-
-//     const isCodeValid = user.otp === otp;
-//     const isNotExpired = user.otpExpires > Date.now();
-
-//     if (isCodeValid && isNotExpired) {
-//       user.verify_email = true;
-//       user.otp = null;
-//       user.otpExpires = null;
-//       await user.save();
-//       return response.status(200).json({
-//         error: false,
-//         success: true,
-//         message: "Email verified successfully",
-//       });
-//     } else if (!isCodeValid) {
-//       return response
-//         .status(400)
-//         .json({ error: true, success: false, message: "Invalid OTP" });
-//     } else {
-//       return response
-//         .status(400)
-//         .json({ error: true, success: false, message: "OTP expired" });
-//     }
-//   } catch (error) {
-//     return response.status(500).json({
-//       message: error.message || error,
-//       error: true,
-//       success: false,
-//     });
-//   }
-// }
-
-// export async function registerUserController(req, res) {
-//   try {
-//     const { name, email, phone, password } = req.body;
-//     if (!name || !email || !phone || !password) {
-//       return res
-//         .status(400)
-//         .json({ message: "All fields are required", error: true });
-//     }
-
-//     const existingUser = await UserModel.findOne({
-//       $or: [{ email }, { phone }],
-//     });
-//     if (existingUser) {
-//       return res
-//         .status(400)
-//         .json({ message: "User already registered.", error: true });
-//     }
-
-//     const existingPending = await PendingUser.findOne({
-//       $or: [{ email }, { phone }],
-//     });
-//     if (existingPending) {
-//       return res
-//         .status(400)
-//         .json({
-//           message: "An OTP is already sent. Please verify.",
-//           error: true,
-//         });
-//     }
-
-//     const hashedPassword = await bcryptjs.hash(password, 10);
-//     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-//     const otpExpires = Date.now() + 600000; // 10 minutes
-
-//     await PendingUser.create({
-//       name,
-//       email,
-//       phone,
-//       password: hashedPassword,
-//       otp,
-//       otpExpires,
-//     });
-
-//     await sendEmailFun({
-//       sendTo: email,
-//       subject: "Verify email from Soouqna App",
-//       html: VerificationEmail(name, otp),
-//     });
-
-//     return res
-//       .status(200)
-//       .json({
-//         success: true,
-//         message: "OTP sent to your email. Please verify.",
-//       });
-//   } catch (error) {
-//     return res.status(500).json({ message: error.message, error: true });
-//   }
-// }
-
 export async function registerUserController(req, res) {
   try {
     const { name, email, password } = req.body;
@@ -436,6 +258,86 @@ export async function authWithGoogle(request, response) {
   }
 }
 
+// Auth with Facebook
+export async function authWithFacebook(request, response) {
+  const { name, email, password, avatar, phone, role } = request.body;
+
+  try {
+    const existingUser = await UserModel.findOne({ email: email });
+
+    if (!existingUser) {
+      const user = await UserModel.create({
+        name: name,
+        phone: phone,
+        email: email,
+        password: "null",
+        avatar: avatar,
+        role: role,
+        verify_email: true,
+        signUpWithFacebook: true,
+      });
+
+      await user.save();
+
+      const accesstoken = await generatedAccessToken(user._id);
+      const refreshToken = await genertedRefreshToken(user._id);
+
+      await UserModel.findByIdAndUpdate(user?._id, {
+        last_login_date: new Date(),
+      });
+
+      const cookiesOption = {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+      };
+      response.cookie("accessToken", accesstoken, cookiesOption);
+      response.cookie("refreshToken", refreshToken, cookiesOption);
+
+      return response.json({
+        message: "Login successfully",
+        error: false,
+        success: true,
+        data: {
+          accesstoken,
+          refreshToken,
+        },
+      });
+    } else {
+      const accesstoken = await generatedAccessToken(existingUser._id);
+      const refreshToken = await genertedRefreshToken(existingUser._id);
+
+      await UserModel.findByIdAndUpdate(existingUser?._id, {
+        last_login_date: new Date(),
+      });
+
+      const cookiesOption = {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+      };
+      response.cookie("accessToken", accesstoken, cookiesOption);
+      response.cookie("refreshToken", refreshToken, cookiesOption);
+
+      return response.json({
+        message: "Login successfully",
+        error: false,
+        success: true,
+        data: {
+          accesstoken,
+          refreshToken,
+        },
+      });
+    }
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
 export async function loginUserController(request, response) {
   try {
     const { email, password } = request.body;
@@ -479,6 +381,16 @@ export async function loginUserController(request, response) {
       return response.status(400).json({
         message:
           "This account was registered with Google. Please login with Google.",
+        error: true,
+        success: false,
+      });
+    }
+
+    // Check if the user registered with Facebook
+    if (user.signUpWithFacebook) {
+      return response.status(400).json({
+        message:
+          "This account was registered with Facebook. Please login with Facebook.",
         error: true,
         success: false,
       });

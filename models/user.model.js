@@ -70,6 +70,10 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    signUpWithFacebook: {
+      type: Boolean,
+      default: false,
+    },
     locationPermission: {
       type: Boolean,
       default: false,
