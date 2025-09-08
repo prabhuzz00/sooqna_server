@@ -519,10 +519,67 @@ export async function getAllProductsForVendorIdrej(request, response) {
   }
 }
 
+// export async function getAllProductsByCatId(request, response) {
+//   try {
+//     const page = parseInt(request.query.page) || 1;
+//     const perPage = parseInt(request.query.perPage) || 10000;
+
+//     // Count only verified products for the given category
+//     const totalPosts = await ProductModel.countDocuments({
+//       catId: request.params.id,
+//       isVerified: true,
+//     });
+//     const totalPages = Math.ceil(totalPosts / perPage);
+
+//     if (page > totalPages) {
+//       return response.status(404).json({
+//         message: "Page not found",
+//         success: false,
+//         error: true,
+//       });
+//     }
+
+//     // Find products where isVerified is true
+//     const products = await ProductModel.find({
+//       catId: request.params.id,
+//       isVerified: true,
+//     })
+//       .populate("category")
+//       .skip((page - 1) * perPage)
+//       .limit(perPage)
+//       .exec();
+
+//     if (!products || products.length === 0) {
+//       return response.status(404).json({
+//         error: true,
+//         success: false,
+//         message: "No verified products found for this category",
+//       });
+//     }
+
+//     return response.status(200).json({
+//       error: false,
+//       success: true,
+//       products: products,
+//       totalPages: totalPages,
+//       page: page,
+//     });
+//   } catch (error) {
+//     return response.status(500).json({
+//       message: error.message || error,
+//       error: true,
+//       success: false,
+//     });
+//   }
+// }
+
+//get all categories by category id
+// Batch fetch products for multiple category IDs
+
 export async function getAllProductsByCatId(request, response) {
   try {
     const page = parseInt(request.query.page) || 1;
-    const perPage = parseInt(request.query.perPage) || 10000;
+    const perPage = parseInt(request.query.perPage) || 12; // Set a reasonable default limit for performance
 
     // Count only verified products for the given category
     const totalPosts = await ProductModel.countDocuments({
@@ -531,7 +588,7 @@ export async function getAllProductsByCatId(request, response) {
     });
     const totalPages = Math.ceil(totalPosts / perPage);
 
-    if (page > totalPages) {
+    if (page > totalPages && totalPages !== 0) {
       return response.status(404).json({
         message: "Page not found",
         success: false,
@@ -539,14 +596,18 @@ export async function getAllProductsByCatId(request, response) {
       });
     }
 
-    // Find products where isVerified is true
+    // Only select fields needed for frontend (add/remove fields as needed)
+    const homepageFields = "name arbName price oldPrice images catId catName catNameAr isFeatured isVerified sale discount countInStock rating createdAt";
+
+    // Find products where isVerified is true, avoid populate, and use lean() for performance
     const products = await ProductModel.find({
       catId: request.params.id,
       isVerified: true,
     })
-      .populate("category")
+      .select(homepageFields)
       .skip((page - 1) * perPage)
       .limit(perPage)
+      .lean()
       .exec();
 
     if (!products || products.length === 0) {
@@ -570,6 +631,191 @@ export async function getAllProductsByCatId(request, response) {
       error: true,
       success: false,
     });
+  }
+}
+
+export async function getAllProductsByCatIds(request, response) {
+  try {
+    const catIds = request.query.catIds ? request.query.catIds.split(",") : [];
+    const page = parseInt(request.query.page) || 1;
+    const perPage = parseInt(request.query.perPage) || 10000;
+
+    if (!catIds.length) {
+      return response.status(400).json({
+        error: true,
+        success: false,
+        message: "No category IDs provided",
+      });
+    }
+
+    // Fetch verified products for all category IDs
+    const products = await ProductModel.find({
+      catId: { $in: catIds },
+      isVerified: true,
+    })
+      .populate("category")
+      .skip((page - 1) * perPage)
+      .limit(perPage)
+      .exec();
+
+    // Group products by catId
+    const grouped = {};
+    catIds.forEach((id) => {
+      grouped[id] = [];
+    });
+    products.forEach((product) => {
+      const key = product.catId.toString();
+      if (grouped[key]) {
+        grouped[key].push(product);
+      }
+    });
+
+    // Optionally, you could add totalPages info per category for pagination.
+    // For now, we keep it simple.
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      productsByCategory: grouped,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+//get all product for home page
+// export async function getBulkProductsHome(req, res) {
+//   try {
+//     const { popularCatId, randomCatIds, featured = true, latest = true } = req.body; // send via POST for flexibility
+
+//     const queries = [];
+
+//     // Popular products (for selected category)
+//     if (popularCatId) {
+//       queries.push(
+//         ProductModel.find({ catId: popularCatId, isVerified: true }).limit(12).populate("category").exec()
+//       );
+//     } else {
+//       queries.push(Promise.resolve([]));
+//     }
+
+//     // Featured products
+//     queries.push(
+//       featured ? ProductModel.find({ isFeatured: true, isVerified: true }).limit(12).populate("category").exec() : Promise.resolve([])
+//     );
+
+//     // Random categories products
+//     const randomCatIdsArr = Array.isArray(randomCatIds) ? randomCatIds : [];
+//     queries.push(
+//       ProductModel.find({ catId: { $in: randomCatIdsArr }, isVerified: true }).populate("category").exec()
+//     );
+
+//     // Latest products
+//     queries.push(
+//       latest ? ProductModel.find({ isVerified: true }).sort({ createdAt: -1 }).limit(12).populate("category").exec() : Promise.resolve([])
+//     );
+
+//     // Await all in parallel
+//     const [popular, featuredProducts, randomProducts, latestProducts] = await Promise.all(queries);
+
+//     // Group random products by category
+//     const randomByCategory = {};
+//     randomCatIdsArr.forEach(cid => randomByCategory[cid] = []);
+//     randomProducts.forEach(prod => {
+//       const cid = prod.catId.toString();
+//       if (randomByCategory[cid]) randomByCategory[cid].push(prod);
+//     });
+
+//     res.json({
+//       success: true,
+//       popular,
+//       featured: featuredProducts,
+//       randomByCategory,
+//       latest: latestProducts
+//     });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message || error });
+//   }
+// }
+
+export async function getBulkProductsHome(req, res) {
+  try {
+    const { popularCatId, randomCatIds, featured = true, latest = true } = req.body; // send via POST for flexibility
+
+    const queries = [];
+
+    // Only select fields needed for homepage for speed
+    const homepageFields = "name arbName price oldPrice images catId catName catNameAr isFeatured isVerified sale discount countInStock rating createdAt";
+
+    // Popular products (for selected category)
+    if (popularCatId) {
+      queries.push(
+        ProductModel.find({ catId: popularCatId, isVerified: true })
+          .limit(12)
+          .select(homepageFields)
+          .lean()
+          .exec()
+      );
+    } else {
+      queries.push(Promise.resolve([]));
+    }
+
+    // Featured products
+    queries.push(
+      featured
+        ? ProductModel.find({ isFeatured: true, isVerified: true })
+            .limit(12)
+            .select(homepageFields)
+            .lean()
+            .exec()
+        : Promise.resolve([])
+    );
+
+    // Random categories products
+    const randomCatIdsArr = Array.isArray(randomCatIds) ? randomCatIds : [];
+    queries.push(
+      ProductModel.find({ catId: { $in: randomCatIdsArr }, isVerified: true })
+        .select(homepageFields)
+        .lean()
+        .exec()
+    );
+
+    // Latest products
+    queries.push(
+      latest
+        ? ProductModel.find({ isVerified: true })
+            .sort({ createdAt: -1 })
+            .limit(12)
+            .select(homepageFields)
+            .lean()
+            .exec()
+        : Promise.resolve([])
+    );
+
+    // Await all in parallel
+    const [popular, featuredProducts, randomProducts, latestProducts] = await Promise.all(queries);
+
+    // Group random products by category
+    const randomByCategory = {};
+    randomCatIdsArr.forEach(cid => randomByCategory[cid] = []);
+    randomProducts.forEach(prod => {
+      const cid = prod.catId?.toString();
+      if (randomByCategory[cid]) randomByCategory[cid].push(prod);
+    });
+
+    res.json({
+      success: true,
+      popular,
+      featured: featuredProducts,
+      randomByCategory,
+      latest: latestProducts
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || error });
   }
 }
 

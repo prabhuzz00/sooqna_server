@@ -45,6 +45,8 @@ import {
   uploadColorImages,
   rejectProduct,
   getAllProductsForVendorIdrej,
+  getAllProductsByCatIds,
+  getBulkProductsHome,
 } from "../controllers/product.controller.js";
 
 import { removeImageFromCloudinary } from "../controllers/category.controller.js";
@@ -89,6 +91,9 @@ productRouter.get(
 );
 productRouter.get("/getAllProductsBanners", getAllProductsBanners);
 productRouter.get("/getAllProductsByCatId/:id", getAllProductsByCatId);
+productRouter.get('/api/product/getAllProductsByCatIds', getAllProductsByCatIds);
+productRouter.post('/getBulkProductsHome', getBulkProductsHome);
+
 productRouter.get("/getAllProductsByCatName", getAllProductsByCatName);
 productRouter.get("/getAllProductsBySubCatId/:id", getAllProductsBySubCatId);
 productRouter.get("/getAllProductsBySubCatName", getAllProductsBySubCatName);
